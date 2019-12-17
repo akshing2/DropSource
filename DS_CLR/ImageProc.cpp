@@ -27,10 +27,16 @@ cv::Mat ImageProcessing::BinaryThresh(cv::Mat image)
 {
 	// initialise pre-processed image to return
 	cv::Mat pre_proc;
+
 	// Apply a Gausian linear filter on the image,
 	// This is to reduce the noise of the image.
 	// Parameters may need to be changed.
 	cv::GaussianBlur(image, pre_proc, cv::Size(5, 5), 0);
+
+	// Conduct an adaptive threshold on the droplet.
+	// Parameters may need to be changed.
+	// https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html?highlight=adaptivethreshold
+	cv::adaptiveThreshold(pre_proc, pre_proc, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 11, 2);
 
 	return pre_proc;
 }

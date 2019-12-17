@@ -16,6 +16,7 @@
 
 #include "ImageProc.h"
 #include "UI.h"
+#include "Test_Macro.h"
 //
 using namespace UI_ERROR;
 
@@ -478,8 +479,8 @@ private: System::Void StartAnalysis_button_Click(System::Object^ sender, System:
 	if (!err)
 	{
 		
-		ListOfFiles(UI_ERROR::convert_SYS_to_std_string(this->InputDir_text->Text));
-		test_ocv();
+		file_system::ListOfFiles(UI_ERROR::SYS2std_string(this->InputDir_text->Text));
+		ImProcTest::test_ocv();
 	}
 }
 

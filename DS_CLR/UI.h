@@ -67,7 +67,7 @@ namespace UI_ERROR
 		return ret;
 	}
 
-	std::string convert_SYS_to_std_string(System::String^ conv)
+	std::string SYS2std_string(System::String^ conv)
 	{
 		msclr::interop::marshal_context context;
 		std::string std_test = context.marshal_as<std::string>(conv);
