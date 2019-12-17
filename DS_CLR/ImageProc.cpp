@@ -66,8 +66,9 @@ void ImProcTest::test_ocv(void)
 	cv::waitKey();
 }
 
-void ImProcTest::test_preprocessing(std::string input_dir, std::string output_dir)
+bool ImProcTest::test_preprocessing(std::string input_dir, std::string output_dir)
 {
+	bool success = false;
 	// filename temp for output
 	std::string	fpOut = output_dir + std::string("/binarized_");
 	std::string fpFull;
@@ -84,7 +85,15 @@ void ImProcTest::test_preprocessing(std::string input_dir, std::string output_di
 		// filename
 		fpFull = fpOut + std::to_string(counter) + exten;
 		// write to output directory
-		cv::imwrite(fpFull, preproc_img);
+		if (!cv::imwrite(fpFull, preproc_img))
+		{
+			// something went wrong so break
+			success = false;
+			break;
+		}
 		counter++;
+
 	}
+
+	return success;
 }

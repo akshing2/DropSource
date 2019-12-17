@@ -89,6 +89,12 @@ namespace DSCLR {
 	private: System::Windows::Forms::Label^ Error_FPS;
 	private: System::Windows::Forms::Label^ Error_Input;
 	private: System::Windows::Forms::Label^ Error_Output;
+	private: System::Windows::Forms::Label^ Error_Test;
+	private: System::Windows::Forms::ProgressBar^ ProgressBar;
+
+	private:
+
+
 
 
 
@@ -145,6 +151,8 @@ namespace DSCLR {
 			this->Error_FPS = (gcnew System::Windows::Forms::Label());
 			this->Error_Input = (gcnew System::Windows::Forms::Label());
 			this->Error_Output = (gcnew System::Windows::Forms::Label());
+			this->Error_Test = (gcnew System::Windows::Forms::Label());
+			this->ProgressBar = (gcnew System::Windows::Forms::ProgressBar());
 			this->SuspendLayout();
 			// 
 			// NameOfTest_label
@@ -398,12 +406,36 @@ namespace DSCLR {
 			this->Error_Output->Text = L"Output Not Selected";
 			this->Error_Output->Visible = false;
 			// 
+			// Error_Test
+			// 
+			this->Error_Test->AutoSize = true;
+			this->Error_Test->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->Error_Test->ForeColor = System::Drawing::Color::Red;
+			this->Error_Test->Location = System::Drawing::Point(233, 533);
+			this->Error_Test->Name = L"Error_Test";
+			this->Error_Test->Size = System::Drawing::Size(121, 29);
+			this->Error_Test->TabIndex = 23;
+			this->Error_Test->Text = L"Error In Test";
+			this->Error_Test->Visible = false;
+			// 
+			// ProgressBar
+			// 
+			this->ProgressBar->ForeColor = System::Drawing::Color::Lime;
+			this->ProgressBar->Location = System::Drawing::Point(238, 565);
+			this->ProgressBar->Name = L"ProgressBar";
+			this->ProgressBar->Size = System::Drawing::Size(641, 29);
+			this->ProgressBar->TabIndex = 24;
+			this->ProgressBar->Visible = false;
+			// 
 			// DropSourceFrom
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::Control;
 			this->ClientSize = System::Drawing::Size(1352, 635);
+			this->Controls->Add(this->ProgressBar);
+			this->Controls->Add(this->Error_Test);
 			this->Controls->Add(this->Error_Output);
 			this->Controls->Add(this->Error_Input);
 			this->Controls->Add(this->Error_FPS);
@@ -439,7 +471,7 @@ namespace DSCLR {
 	private: System::Void label2_Click(System::Object^ sender, System::EventArgs^ e) {
 	}
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
-		test_ocv();
+		//test_ocv();
 	}
 	private: System::Void label1_Click(System::Object^ sender, System::EventArgs^ e) {
 	}
@@ -474,13 +506,40 @@ private: System::Void InputDir_button_Click(System::Object^ sender, System::Even
 private: System::Void folderBrowserDialog1_HelpRequest(System::Object^ sender, System::EventArgs^ e) {
 }
 private: System::Void StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e) {
-	bool err = User_Input_Error_Check();
+	bool err = false;
+	
+	if (UI_INPUR_ERROR_CHECK)
+	{
+		err = User_Input_Error_Check();
+	}
 
 	if (!err)
 	{
-		
-		file_system::ListOfFiles(UI_ERROR::SYS2std_string(this->InputDir_text->Text));
+		if (TEST_OCV) 
 		ImProcTest::test_ocv();
+
+		if (TEST_LIST_FILES)
+		file_system::ListOfFiles(UI_ERROR::SYS2std_string(this->InputDir_text->Text));
+
+		if (TEST_PREPROC)
+		{
+			this->Error_Test->Visible = false;
+			bool success = ImProcTest::test_preprocessing(UI_ERROR::SYS2std_string(this->InputDir_text->Text), 
+				UI_ERROR::SYS2std_string(this->OutputDir_text->Text));
+
+			if (success)
+			{
+				this->Error_Test->Text = "Test Success! [test_preprocessing]";
+				this->Error_Test->ForeColor = System::Drawing::Color::Green;
+				
+			}
+			else {
+				this->Error_Test->Text = "Test Failed! [test_preprocessing]";
+				this->Error_Test->ForeColor = System::Drawing::Color::Red;
+			}
+			this->Error_Test->Visible = true;
+		}
+		
 	}
 }
 

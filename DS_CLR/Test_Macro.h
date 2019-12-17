@@ -10,8 +10,9 @@
 #pragma once
 
 // Enable UI Error Input
-#define UI_INPUR_ERROR_CHECK	1
+#define UI_INPUR_ERROR_CHECK	0
 
 // Enable Tests
 #define TEST_OCV				0
+#define TEST_LIST_FILES			0
 #define TEST_PREPROC			1

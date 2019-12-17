@@ -62,5 +62,5 @@ namespace ImProcTest
 	// Test preprocessing
 	// Read in all images in input folder
 	// And output preprocessed images in output directory
-	void test_preprocessing(std::string input_dir, std::string output_dir);
+	bool test_preprocessing(std::string input_dir, std::string output_dir);
 };
