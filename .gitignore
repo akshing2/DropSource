@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+.vs/DS_CLR/v16/.suo
+.vs/DS_CLR/v16/Browse.VC.db
+.vs/DS_CLR/v16/Browse.VC.opendb
+.vs/DS_CLR/v16/ipch/AutoPCH/b75e7f2c3d3e1574/DROPSOURCEFROM.ipch
+DS_CLR/x64/Release/DS_CLR.vcxprojAssemblyReference.cache
+.vs/DS_CLR/v16/.suo
+.vs/DS_CLR/v16/Browse.VC.db
