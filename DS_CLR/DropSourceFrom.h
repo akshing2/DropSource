@@ -1,3 +1,17 @@
+/*
+*	@brief
+*	This is the Windows Form Object that drives the GUI. It was created by the Visual Studio IDE.
+*	Here, external functions will be used as callbacks for buttons, the user will input parameters
+*	for every individual DOD analysis. The purposes of the external files are as follows:
+*
+*	ImageProc.h		->		Used to do image processing and droplet analysis
+*	UI.h			->		Used to handle user inputs
+*
+*	AUTHOR:		Akshin Goswami
+*	DATE:		17/12/19
+*	VERSION:	0.1.0
+*/
+
 #pragma once
 
 #include "ImageProc.h"

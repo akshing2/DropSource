@@ -1,20 +1,56 @@
+/*
+*	@brief
+*	The following is a set of functions used for image processing and susbequent droplet analysis.
+*	These are external functions to be used in the windows form, DropSourceForm.h. The aim here is
+*	to process each individual frame of the high speed video, extract information about the parameters 
+*	we want, and then save that information into data structures to be published as a CSV 
+*	or some other appropriate format.
+*
+*
+*	AUTHOR:		Akshin Goswami
+*	DATE:		17/12/2019
+*	VERSION:	0.1.0
+*
+*	TODO:
+*		* Pre-processing
+*		* Drawing Contours
+*		* Get a vector of images with contours drawn on them
+*		* Develop an algorithm to differentiate main drop from satellite
+*		* Produce a video of processed images 
+*
+*	Future Goals:
+*		1. Develop algorithm to determine position and velocity of main droplet.
+*		2. Develop algorithm to determine number of satellites.
+*		3. Develop algorithm to determine length of ligament.
+*		4. Develop algorithm to determine volume of main droplet.
+*/
+
 #pragma once
 #include <opencv2/opencv.hpp>
 
-// simple ocv test
-void test_ocv(void);
+// Functions to navigate file systems
+namespace file_system
+{
+	std::vector<std::string> ListOfFiles(std::string Input_Directory);
+};
 
-std::vector<std::string> ListOfFiles(std::string Input_Directory);
 
 // Image Processing Functions
 namespace ImageProcessing
 {
-	// the functions used for every image
 	// Preprocessing
-	void BinaryThresh(cv::Mat image);
+	cv::Mat BinaryThresh(cv::Mat image);
+	// Draw Contours
 	void DrawContours(cv::Mat bin_img, cv::Mat colr_img);
 
 	// Contour Image List
 
 
+};
+
+// Set of functions for testing image processing functions
+namespace ImProcTest
+{
+	// simple ocv test
+	void test_ocv(void);
 };

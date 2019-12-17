@@ -1,16 +1,18 @@
-#pragma once
-// the following is a set of functions for
-// Checking the input parameters of the UI
+/*
+*	@brief
+*	These are a set of functions used to handle user input.
+*
+*	AUTHOR:		Akshin Goswami
+*	DATE:		17/12/19
+*	VERSION:	0.1.0
+*/
 
-//#include "DropSourceFrom.h"
+#pragma once
+
 #include <iostream>
 #include <msclr/marshal_cppstd.h>
 
-
-//using namespace DSCLR;
-//using namespace System;
-//using namespace std;
-
+// Check input errors, program won't start if there are any.
 namespace UI_ERROR
 {
 	enum FieldErrors
