@@ -38,6 +38,11 @@ namespace file_system
 // Image Processing Functions
 namespace ImageProcessing
 {
+	// Save a vector of images from input directory
+	// @param:
+	//		input_dir	->	Input directory from form
+	//		IMREAD_TYPE	->	Determines how image should be read in (eg colour or grayscale)
+	std::vector<cv::Mat> get_images(std::string input_dir, int IMREAD_TYPE);
 	// Preprocessing
 	cv::Mat BinaryThresh(cv::Mat image);
 	// Draw Contours
@@ -53,4 +58,9 @@ namespace ImProcTest
 {
 	// simple ocv test
 	void test_ocv(void);
+
+	// Test preprocessing
+	// Read in all images in input folder
+	// And output preprocessed images in output directory
+	void test_preprocessing(std::string input_dir, std::string output_dir);
 };
