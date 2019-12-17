@@ -1,5 +1,5 @@
 ﻿  DropSourceFrom.cpp
-C:\Users\akshi\Google Drive\Thesis\WindowsApp\DS_CLR\DS_CLR\DropSourceFrom.cpp(8,1): warning C4829: Possibly incorrect parameters to function main. Consider 'int main(Platform::Array<Platform::String^>^ argv)'
+C:\Users\akshi\OneDrive\Documents\GitHub\DropSource2\DropSource\DS_CLR\DropSourceFrom.cpp(33,1): warning C4829: Possibly incorrect parameters to function main. Consider 'int main(Platform::Array<Platform::String^>^ argv)'
   ImageProc.cpp
   Generating Code...
 C:\Users\akshi\Google Drive\Thesis\opencv\build\include\opencv2\core\cuda.inl.hpp(105): warning C4793: 'cv::cuda::GpuMat::GpuMat': function compiled as native:
@@ -18,7 +18,6 @@ C:\Users\akshi\Google Drive\Thesis\opencv\build\include\opencv2\core\cuda.inl.hp
   	Found an intrinsic not supported in managed code
 C:\Users\akshi\Google Drive\Thesis\opencv\build\include\opencv2\core\cuda.inl.hpp(395): warning C4793: 'cv::cuda::HostMem::HostMem': function compiled as native:
   	Found an intrinsic not supported in managed code
-C:\Users\akshi\Google Drive\Thesis\WindowsApp\DS_CLR\DS_CLR\UI.h(34): error C4716: 'UI_ERROR::check_non_empty_field': must return a value
 C:\Users\akshi\Google Drive\Thesis\opencv\build\include\opencv2\core\mat.inl.hpp(530): warning C4793: 'cv::Mat::Mat': function compiled as native:
   	Found an intrinsic not supported in managed code
 C:\Users\akshi\Google Drive\Thesis\opencv\build\include\opencv2\core\mat.inl.hpp(850): warning C4793: 'cv::Mat::release': function compiled as native:
@@ -27,3 +26,6 @@ C:\Users\akshi\Google Drive\Thesis\opencv\build\include\opencv2\core\mat.inl.hpp
   	Found an intrinsic not supported in managed code
 C:\Users\akshi\Google Drive\Thesis\opencv\build\include\opencv2\core\mat.inl.hpp(3781): warning C4793: 'cv::UMat::addref': function compiled as native:
   	Found an intrinsic not supported in managed code
+  .NETFramework,Version=v4.7.2.AssemblyAttributes.cpp
+  DropSourceFrom.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link
+  DS_CLR.vcxproj -> C:\Users\akshi\OneDrive\Documents\GitHub\DropSource2\DropSource\x64\Release\DS_CLR.exe

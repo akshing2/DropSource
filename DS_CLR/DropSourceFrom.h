@@ -105,6 +105,7 @@ namespace DSCLR {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(DropSourceFrom::typeid));
 			this->NameOfTest_label = (gcnew System::Windows::Forms::Label());
 			this->ROI_label = (gcnew System::Windows::Forms::Label());
 			this->FPS_label = (gcnew System::Windows::Forms::Label());
@@ -409,6 +410,7 @@ namespace DSCLR {
 			this->Controls->Add(this->FPS_label);
 			this->Controls->Add(this->ROI_label);
 			this->Controls->Add(this->NameOfTest_label);
+			this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
 			this->Name = L"DropSourceFrom";
 			this->Text = L"DropSource";
 			this->Load += gcnew System::EventHandler(this, &DropSourceFrom::DropSourceFrom_Load);
