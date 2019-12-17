@@ -68,7 +68,7 @@ void ImProcTest::test_ocv(void)
 
 bool ImProcTest::test_preprocessing(std::string input_dir, std::string output_dir)
 {
-	bool success = false;
+	bool success = true;
 	// filename temp for output
 	std::string	fpOut = output_dir + std::string("/binarized_");
 	std::string fpFull;

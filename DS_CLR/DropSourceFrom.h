@@ -547,35 +547,5 @@ private: System::Void StartAnalysis_button_Click(System::Object^ sender, System:
 public:
 	bool User_Input_Error_Check();
 
-	//// getters
-	//System::String^ getNameOfTest()
-	//{
-	//	return NameOfTest_Text->Text;
-	//}
-
-	//std::vector<UInt32> getROI()
-	//{
-	//	UInt32 width = System::UInt32::Parse(Width_text->Text);
-	//	UInt32 height = System::UInt32::Parse(Height_txt->Text);
-	//	std::vector<UInt32> ret;
-	//	ret.push_back(width);
-	//	ret.push_back(height);
-	//	return ret;
-	//}
-
-	//UInt32 getFPS()
-	//{
-	//	return System::UInt32::Parse(FPS_text->Text);
-	//}
-
-	//System::String^ getInputDirectory()
-	//{
-	//	return InputDir_text->Text;
-	//}
-
-	//System::String^ getOutputDirectory()
-	//{
-	//	return OutputDir_text->Text;
-	//}
 };
 }
