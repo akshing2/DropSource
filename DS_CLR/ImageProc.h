@@ -12,7 +12,6 @@
 *	VERSION:	0.1.0
 *
 *	TODO:
-*		* Pre-processing
 *		* Drawing Contours
 *		* Get a vector of images with contours drawn on them
 *		* Develop an algorithm to differentiate main drop from satellite
@@ -27,6 +26,8 @@
 
 #pragma once
 #include <opencv2/opencv.hpp>
+
+#define MAX_SATELLITE_SIZE 5
 
 // Functions to navigate file systems
 namespace file_system
@@ -46,7 +47,8 @@ namespace ImageProcessing
 	// Preprocessing
 	cv::Mat BinaryThresh(cv::Mat image);
 	// Draw Contours
-	void DrawContours(cv::Mat bin_img, cv::Mat colr_img);
+	// Returns processed image, which is a frame of the high speed video
+	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites);
 
 	// Contour Image List
 
@@ -63,4 +65,6 @@ namespace ImProcTest
 	// Read in all images in input folder
 	// And output preprocessed images in output directory
 	bool test_preprocessing(std::string input_dir, std::string output_dir);
+
+	void test_DrawContours(std::string input_dir);
 };

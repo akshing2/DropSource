@@ -15,4 +15,5 @@
 // Enable Tests
 #define TEST_OCV				0
 #define TEST_LIST_FILES			0
-#define TEST_PREPROC			1
+#define TEST_PREPROC			0
+#define TEST_DRAW_CONTOURS		1

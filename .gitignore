@@ -37,3 +37,8 @@
 DS_CLR/x64/Release/DS_CLR.vcxprojAssemblyReference.cache
 .vs/DS_CLR/v16/.suo
 .vs/DS_CLR/v16/Browse.VC.db
+DS_CLR/x64/Debug/DS_CLR.log
+DS_CLR/x64/Debug/DS_CLR.log
+DS_CLR/x64/Debug/DS_CLR.tlog/CL.command.1.tlog
+DS_CLR/x64/Debug/DS_CLR.tlog/CL.read.1.tlog
+*.tlog

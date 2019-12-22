@@ -58,6 +58,57 @@ cv::Mat ImageProcessing::BinaryThresh(cv::Mat image)
 	return pre_proc;
 }
 
+cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites)
+{
+	// initialise return processed frame
+	cv::Mat cont_img = colr_img.clone();
+	// initialise contours and heriarchies
+	// May need to revisit
+	std::vector<std::vector<cv::Point>> Contours;
+	std::vector<cv::Vec4i> Heirarchy;
+	// Set colour of drawing
+	cv::Scalar colour = Scalar(0, 0, 255);
+	// radius of center of circle
+	int radius = 2;
+
+	// find contours
+	// Parameters found in python script
+	cv::findContours(bin_img, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+
+	// Get moments
+	std::vector<cv::Moments> mu(Contours.size());
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		mu[i] = cv::moments(Contours[i], true);
+	}
+
+	// Get Mass centers
+	std::vector<cv::Point2f> mc(Contours.size());
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		mc[i] = cv::Point2f(mu[i].m10 / mu[i].m00, mu[i].m01 / mu[i].m00);
+	}
+
+	// Draw contours with centroids in them
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		// check if you want to include satellites or not
+		if (!IncludeSatellites)
+		{
+			// Less than max satellite size, consider as satellite
+			if (cv::contourArea(Contours[i]) < MAX_SATELLITE_SIZE) {
+				continue;
+			}
+		}
+		// Draw contours
+		cv::drawContours(cont_img, Contours, i, colour, -1);
+		// Put center of mass on
+		cv::circle(cont_img, mc[i], radius, colour, -1);
+	}
+
+	return cont_img;
+}
+
 void ImProcTest::test_ocv(void)
 {
 	const char* file = "C:/Users/akshi/Google Drive/Thesis/Thesis A Images/binary_thresholding.jpg";
@@ -96,4 +147,32 @@ bool ImProcTest::test_preprocessing(std::string input_dir, std::string output_di
 	}
 
 	return success;
+}
+
+void ImProcTest::test_DrawContours(std::string input_dir)
+{
+	std::vector<std::string> fpList = file_system::ListOfFiles(input_dir);
+	bool IncludeStaellites = true;
+	cv::Mat binary_image;
+	cv::Mat contour_img;
+
+	for (int i = 0; i < fpList.size(); i++)
+	{
+		// get grayscale images
+		std::vector<cv::Mat> grayscale_images = ImageProcessing::get_images(input_dir, cv::IMREAD_GRAYSCALE);
+		// get colour images
+		std::vector<cv::Mat> colour_images = ImageProcessing::get_images(input_dir, cv::IMREAD_COLOR);
+
+		// loop through and get contoured image from each vector
+		// show processed image in imshow
+		for (int j = 0; j < colour_images.size(); j++)
+		{
+			binary_image = ImageProcessing::BinaryThresh(grayscale_images[i]);
+			contour_img = ImageProcessing::DrawContours(binary_image, colour_images[i], IncludeStaellites);
+			
+			cv::imshow("Contoured Image", contour_img);
+			cv::waitKey(0);
+			cv::destroyWindow("Contoured Image");
+		}
+	}
 }
