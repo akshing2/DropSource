@@ -66,6 +66,33 @@ cv::Mat ImageProcessing::BinaryThresh(cv::Mat image)
 	return pre_proc;
 }
 
+std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
+{
+	//std::vector<cv::Point2f> centers;
+	std::vector<std::vector<cv::Point>> Contours;
+	std::vector<cv::Vec4i> Heirarchy;
+
+	// find contours
+	// Parameters found in python script
+	cv::findContours(binary_image, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+
+	// Get moments
+	std::vector<cv::Moments> mu(Contours.size());
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		mu[i] = cv::moments(Contours[i], true);
+	}
+
+	// Get Mass centers
+	std::vector<cv::Point2f> centers(Contours.size());
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		centers[i] = cv::Point2f(mu[i].m10 / mu[i].m00, mu[i].m01 / mu[i].m00);
+	}
+
+	return centers;
+}
+
 cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites)
 {
 	// initialise return processed frame
@@ -106,6 +133,8 @@ cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool In
 		{
 			// Less than max satellite size, consider as satellite
 			if (cv::contourArea(Contours[i]) < MAX_SATELLITE_SIZE) {
+				// remove contour if smaller than satellite
+				//Contours.erase(Contours.begin() + i);
 				continue;
 			}
 		}
@@ -113,6 +142,9 @@ cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool In
 		cv::drawContours(cont_img, Contours, i, colour, -1);
 		// Put center of mass on
 		cv::circle(cont_img, mc[i], radius, colour2, -1);
+		// Label centers
+		std::string cent_str = std::to_string(mc[i].y);
+		cv::putText(cont_img, cent_str, mc[i], cv::FONT_HERSHEY_COMPLEX, 1, colour2);
 	}
 
 	return cont_img;

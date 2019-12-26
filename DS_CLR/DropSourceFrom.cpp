@@ -72,6 +72,8 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 {
 	std::vector<cv::Mat> images;
 	cv::Mat img;
+	System::String^ col_type;
+
 	// Get the filepaths of all the images as a string vector
 	std::vector<std::string> fp_input = file_system::ListOfFiles(UI_ERROR::SYS2std_string(this->InputDir_text->Text));
 
@@ -87,7 +89,20 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 	this->PB_Label->Visible = true;
 	this->ProgressBar->Visible = true;
 	
-
+	switch (IMREAD_TYPE)
+	{
+	case cv::IMREAD_ANYCOLOR:
+		col_type = "IMREAD_ANYCOLOR";
+		break;
+	case cv::IMREAD_COLOR:
+		col_type = "IMREAD_COLOR";
+		break;
+	case cv::IMREAD_GRAYSCALE:
+		col_type = "IMREAD_GRAYSCALE";
+		break;
+	default:
+		col_type = "UNKNOWN IMREAD";
+	}
 
 	// iterate through fp_input and save into grayscale images
 	for (int i = 0; i < fp_input.size(); i++)
@@ -100,7 +115,7 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 		ProgressVal = i;
 		this->ProgressBar->Value = ProgressVal;
 		this->ProgressBar->Update();
-		pb_str = "Reading in file: " + i + "/" + fp_input.size();
+		pb_str = col_type + "-Reading in file: " + i + "/" + fp_input.size();
 		this->PB_Label->Text = pb_str;
 		this->PB_Label->Update();
 		
@@ -118,6 +133,33 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 	this->ProgressBar->Value = 0;
 
 	return images;
+}
+
+std::vector<cv::Point2f> DSCLR::DropSourceFrom::ImageCentroids(cv::Mat binary_image)
+{
+	std::vector<cv::Point2f> centers;
+	std::vector<std::vector<cv::Point>> Contours;
+	std::vector<cv::Vec4i> Heirarchy;
+	
+	// find contours
+	// Parameters found in python script
+	cv::findContours(binary_image, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+
+	// Get moments
+	std::vector<cv::Moments> mu(Contours.size());
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		mu[i] = cv::moments(Contours[i], true);
+	}
+
+	// Get Mass centers
+	std::vector<cv::Point2f> mc(Contours.size());
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		mc[i] = cv::Point2f(mu[i].m10 / mu[i].m00, mu[i].m01 / mu[i].m00);
+	}
+
+	return centers;
 }
 
 bool DSCLR::DropSourceFrom::TestPreProcessing()

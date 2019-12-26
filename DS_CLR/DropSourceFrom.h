@@ -524,6 +524,8 @@ public:
 	// TODO: Maybe save as private member?
 	std::vector<cv::Mat> LoadImages(int IMREAD_TYPE);
 
+
+
 	/*TESTING METHODS**********************************************************************************/
 	bool TestPreProcessing();
 

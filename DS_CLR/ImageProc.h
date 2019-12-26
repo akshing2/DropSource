@@ -2,8 +2,8 @@
 *	@brief
 *	The following is a set of functions used for image processing and susbequent droplet analysis.
 *	These are external functions to be used in the windows form, DropSourceForm.h. The aim here is
-*	to process each individual frame of the high speed video, extract information about the parameters 
-*	we want, and then save that information into data structures to be published as a CSV 
+*	to process each individual frame of the high speed video, extract information about the parameters
+*	we want, and then save that information into data structures to be published as a CSV
 *	or some other appropriate format.
 *
 *
@@ -15,7 +15,7 @@
 *		* Drawing Contours
 *		* Get a vector of images with contours drawn on them
 *		* Develop an algorithm to differentiate main drop from satellite
-*		* Produce a video of processed images 
+*		* Produce a video of processed images
 *
 *	Future Goals:
 *		1. Develop algorithm to determine position and velocity of main droplet.
@@ -53,6 +53,11 @@ namespace ImageProcessing
 	std::vector<cv::Mat> get_images(std::string input_dir, int IMREAD_TYPE);
 	// Preprocessing
 	cv::Mat BinaryThresh(cv::Mat image);
+	// returns a vector of mass centers for a single image
+	// note that return values are in pixels and not actual units
+	// @param:
+	//	binary_image	->	image that has already undergone thresholding
+	std::vector<cv::Point2f> ImageCentroids(cv::Mat binary_image);
 	// Draw Contours
 	// Returns processed image, which is a frame of the high speed video
 	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites);
