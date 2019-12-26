@@ -530,9 +530,9 @@ public:
 	// function to get vector of time values of test
 	// Units: ms
 	std::vector<float> MakeTimeVector(int size);
-	// function to get position of main drop
+	// function to get y position of main drop
 
-	// function to get velocity of main drop
+	// function to get y velocity of main drop
 
 	// function to get number of satellites
 
