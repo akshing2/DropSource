@@ -18,22 +18,7 @@ System::Void DSCLR::DropSourceFrom::StartAnalysis_button_Click(System::Object^ s
 
 	if (!err)
 	{
-		if (TEST_OCV)
-			ImProcTest::test_ocv();
-
-		if (TEST_LIST_FILES)
-			file_system::ListOfFiles(UI_ERROR::SYS2std_string(this->InputDir_text->Text));
-
-		if (TEST_PREPROC)
-		{
-			TestPreProcessing();
-		}
-
-		if (TEST_DRAW_CONTOURS)
-		{
-			TestDrawContours();
-		}
-
+		TestFunctions();
 	}
 	return System::Void();
 }
@@ -169,6 +154,22 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 	this->ProgressBar->Value = 0;
 
 	return images;
+}
+
+std::vector<float> DSCLR::DropSourceFrom::MakeTimeVector(int size)
+{
+	std::vector<float> TimeVector;
+
+	float delta_t = 1/((float)(Convert::ToDouble(this->FPS_text->Text)))*1000;
+	int count = 0;
+	float time_t = 0;
+	for (int i = 0; i < size; i++)
+	{
+		TimeVector.push_back(time_t);
+		time_t += delta_t;
+	}
+
+	return TimeVector;
 }
 
 
@@ -314,6 +315,42 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 	this->Update();
 
 	return success;
+}
+
+bool DSCLR::DropSourceFrom::TestTimeVector()
+{
+	bool success = true;
+	std::vector<cv::Mat> imgs = LoadImages(cv::IMREAD_GRAYSCALE);
+
+	int size = imgs.size();
+
+	std::vector<float> timevec = MakeTimeVector(size);
+
+	return success;
+}
+
+void DSCLR::DropSourceFrom::TestFunctions()
+{
+	if (TEST_OCV)
+		ImProcTest::test_ocv();
+
+	if (TEST_LIST_FILES)
+		file_system::ListOfFiles(UI_ERROR::SYS2std_string(this->InputDir_text->Text));
+
+	if (TEST_PREPROC)
+	{
+		TestPreProcessing();
+	}
+
+	if (TEST_DRAW_CONTOURS)
+	{
+		TestDrawContours();
+	}
+
+	if (TEST_TIME_VECTOR)
+	{
+		TestTimeVector();
+	}
 }
 
 

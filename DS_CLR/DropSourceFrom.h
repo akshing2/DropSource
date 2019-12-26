@@ -10,6 +10,15 @@
 *	AUTHOR:		Akshin Goswami
 *	DATE:		17/12/19
 *	VERSION:	0.1.0
+*
+*
+*	TODO:
+*	1. Get a vector of y positions of main droplet
+*	2. Get a vector of y velocity of main droplet
+*	3. Determine number of satellites
+*	4. Place info above on contoured image for validation
+*	5. Determine length of ligament
+*	6. Determine volume of main drop.
 */
 
 #pragma once
@@ -518,11 +527,25 @@ public:
 	// TODO: Maybe save as private member?
 	std::vector<cv::Mat> LoadImages(int IMREAD_TYPE);
 
-	// function to get position and velocity of main drop, as well as number of satellites.
+	// function to get vector of time values of test
+	// Units: ms
+	std::vector<float> MakeTimeVector(int size);
+	// function to get position of main drop
+
+	// function to get velocity of main drop
+
+	// function to get number of satellites
+
+	// function to gather all parameter data
+	// TODO: software to write data to csv
 
 	/*TESTING METHODS**********************************************************************************/
 	bool TestPreProcessing();
 
 	bool TestDrawContours();
+
+	bool TestTimeVector();
+
+	void TestFunctions();
 };
 }

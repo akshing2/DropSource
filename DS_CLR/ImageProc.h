@@ -11,12 +11,6 @@
 *	DATE:		17/12/2019
 *	VERSION:	0.1.0
 *
-*	TODO:
-*		* Drawing Contours
-*		* Get a vector of images with contours drawn on them
-*		* Develop an algorithm to differentiate main drop from satellite
-*		* Produce a video of processed images
-*
 *	Future Goals:
 *		1. Develop algorithm to determine position and velocity of main droplet.
 *		2. Develop algorithm to determine number of satellites.
