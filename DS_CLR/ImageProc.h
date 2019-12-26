@@ -28,7 +28,7 @@
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
 
-#define MAX_SATELLITE_SIZE 7
+#define MAX_SATELLITE_SIZE 10
 
 // Functions to navigate file systems
 namespace file_system

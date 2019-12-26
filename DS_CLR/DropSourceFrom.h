@@ -427,6 +427,7 @@ namespace DSCLR {
 			this->ProgressBar->Location = System::Drawing::Point(238, 565);
 			this->ProgressBar->Name = L"ProgressBar";
 			this->ProgressBar->Size = System::Drawing::Size(641, 29);
+			this->ProgressBar->Style = System::Windows::Forms::ProgressBarStyle::Continuous;
 			this->ProgressBar->TabIndex = 24;
 			this->ProgressBar->Visible = false;
 			// 

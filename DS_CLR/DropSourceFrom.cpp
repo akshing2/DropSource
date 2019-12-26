@@ -26,26 +26,12 @@ System::Void DSCLR::DropSourceFrom::StartAnalysis_button_Click(System::Object^ s
 
 		if (TEST_PREPROC)
 		{
-			this->PB_Label->Visible = false;
-			bool success = ImProcTest::test_preprocessing(UI_ERROR::SYS2std_string(this->InputDir_text->Text),
-				UI_ERROR::SYS2std_string(this->OutputDir_text->Text));
-
-			if (success)
-			{
-				this->PB_Label->Text = "Test Success! [test_preprocessing]";
-				this->PB_Label->ForeColor = System::Drawing::Color::Green;
-
-			}
-			else {
-				this->PB_Label->Text = "Test Failed! [test_preprocessing]";
-				this->PB_Label->ForeColor = System::Drawing::Color::Red;
-			}
-			this->PB_Label->Visible = true;
+			TestPreProcessing();
 		}
 
 		if (TEST_DRAW_CONTOURS)
 		{
-			ImProcTest::test_DrawContours(UI_ERROR::SYS2std_string(this->InputDir_text->Text), UI_ERROR::SYS2std_string(this->OutputDir_text->Text));
+			TestDrawContours();
 		}
 
 	}
@@ -94,10 +80,13 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 	int ProgressVal = 0;
 	// Set GUI Params
 	this->ProgressBar->Visible = true;
+	this->ProgressBar->Minimum = 0;
+	this->ProgressBar->Maximum = fp_input.size();
 	this->PB_Label->Text = pb_str;
 	this->ProgressBar->Value = ProgressVal;
 	this->PB_Label->Visible = true;
 	this->ProgressBar->Visible = true;
+	
 
 
 	// iterate through fp_input and save into grayscale images
@@ -107,10 +96,14 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 		images.push_back(img);
 
 		// Don't forget to update progress bar
-		ProgressVal = (i / fp_input.size()) * 100;
+		//ProgressVal = (int)round((i / fp_input.size()) * 100);
+		ProgressVal = i;
 		this->ProgressBar->Value = ProgressVal;
+		this->ProgressBar->Update();
 		pb_str = "Reading in file: " + i + "/" + fp_input.size();
 		this->PB_Label->Text = pb_str;
+		this->PB_Label->Update();
+		
 	}
 
 	// Finished loading
@@ -130,8 +123,8 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 bool DSCLR::DropSourceFrom::TestPreProcessing()
 {
 	// format input and output directories
-	std::string output_dir = UI_ERROR::SYS2std_string(this->OutputDir_label->Text);
-	std::string input_dir = UI_ERROR::SYS2std_string(this->InputDir_label->Text);
+	std::string output_dir = UI_ERROR::SYS2std_string(this->OutputDir_text->Text);
+	std::string input_dir = UI_ERROR::SYS2std_string(this->InputDir_text->Text);
 	bool success = true;
 	// filename temp for output
 	std::string	fpOut = output_dir + std::string("/binarized_");
@@ -151,6 +144,10 @@ bool DSCLR::DropSourceFrom::TestPreProcessing()
 	this->ProgressBar->Visible = true;
 	this->PB_Label->Text = pb_str;
 	this->PB_Label->Visible = true;
+	this->ProgressBar->Minimum = 0;
+	this->ProgressBar->Maximum = grayscale_images.size();
+	this->PB_Label->Update();
+	this->ProgressBar->Update();
 
 	// iterrate through Mat vector and save in output directory
 	for (int i = 0; i < grayscale_images.size(); i++)
@@ -170,8 +167,10 @@ bool DSCLR::DropSourceFrom::TestPreProcessing()
 		// Update progress bar
 		pb_str = "Binary Thresholding: " + i + "/" + grayscale_images.size();
 		this->PB_Label->Text = pb_str;
-		ProgressVal = (i / grayscale_images.size()) * 100;
+		ProgressVal = i;
 		this->ProgressBar->Value = ProgressVal;
+		this->PB_Label->Update();
+		this->ProgressBar->Update();
 
 	}
 
@@ -191,8 +190,8 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 	bool success = true;
 
 	// format input and output directories
-	std::string output_dir = UI_ERROR::SYS2std_string(this->OutputDir_label->Text);
-	std::string input_dir = UI_ERROR::SYS2std_string(this->InputDir_label->Text);
+	std::string output_dir = UI_ERROR::SYS2std_string(this->OutputDir_text->Text);
+	std::string input_dir = UI_ERROR::SYS2std_string(this->InputDir_text->Text);
 
 	std::vector<std::string> fpList = file_system::ListOfFiles(input_dir);
 	bool IncludeStaellites = false;
@@ -210,9 +209,9 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 
 
 	// get grayscale images
-	std::vector<cv::Mat> grayscale_images = ImageProcessing::get_images(input_dir, cv::IMREAD_GRAYSCALE);
+	std::vector<cv::Mat> grayscale_images = LoadImages(cv::IMREAD_GRAYSCALE);
 	// get colour images
-	std::vector<cv::Mat> colour_images = ImageProcessing::get_images(input_dir, cv::IMREAD_COLOR);
+	std::vector<cv::Mat> colour_images = LoadImages(cv::IMREAD_COLOR);
 
 	// loop through and get contoured image from each vector
 	// show processed image in imshow
@@ -220,6 +219,10 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 	this->ProgressBar->Visible = true;
 	this->PB_Label->Text = pb_str;
 	this->PB_Label->Visible = true;
+	this->ProgressBar->Minimum = 0;
+	this->ProgressBar->Maximum = colour_images.size();
+	this->ProgressBar->Update();
+	this->PB_Label->Update();
 
 	for (int j = 0; j < colour_images.size(); j++)
 	{
@@ -240,9 +243,11 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 
 		//Update Progress Bar
 		pb_str = "Drawing Contour: " + j + "/" + colour_images.size();
-		ProgressVal = (j / colour_images.size()) * 100;
+		ProgressVal = j;
 		this->PB_Label->Text = pb_str;
 		this->ProgressBar->Value = ProgressVal;
+		this->ProgressBar->Update();
+		this->PB_Label->Update();
 	}
 
 	// end progress bar
@@ -253,7 +258,7 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 
 	this->ProgressBar->Visible = false;
 	this->PB_Label->Visible = false;
-
+	this->Update();
 
 	return success;
 }
