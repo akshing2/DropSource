@@ -41,6 +41,8 @@ namespace DSCLR {
 			//
 			//TODO: Add the constructor code here
 			//
+			ImageWidth_Px = 0;
+			ImageHeight_Px = 0;
 		}
 
 	protected:
@@ -93,24 +95,11 @@ namespace DSCLR {
 
 	private: System::Windows::Forms::ProgressBar^ ProgressBar;
 
+	// Additional private members
 	private:
+		float ImageWidth_Px;
+		float ImageHeight_Px;
 		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	protected:
 
@@ -174,9 +163,9 @@ namespace DSCLR {
 				static_cast<System::Byte>(0)));
 			this->ROI_label->Location = System::Drawing::Point(19, 99);
 			this->ROI_label->Name = L"ROI_label";
-			this->ROI_label->Size = System::Drawing::Size(146, 29);
+			this->ROI_label->Size = System::Drawing::Size(120, 29);
 			this->ROI_label->TabIndex = 1;
-			this->ROI_label->Text = L"ROI (pixels)";
+			this->ROI_label->Text = L"ROI (mm)";
 			this->ROI_label->Click += gcnew System::EventHandler(this, &DropSourceFrom::ROIDimensions_Click);
 			// 
 			// FPS_label
@@ -516,15 +505,20 @@ private: System::Void PB_Label_Click(System::Object^ sender, System::EventArgs^ 
 
 // Define own methods for the class here
 public:
+	/*HELPER METHODS***********************************************************************************/
 	bool User_Input_Error_Check();
 	bool Process_Video();
+	// Setter Functions
+	void setWidthAndHeight_Px(float width, float height);
+	// Converter Functions
+	float Pixels2mm(float data, bool isWidth);
 
 	/*IMAGE HANDLING METHODS***************************************************************************/
 	// returns vector of image in desired load type (ie colour or grayscale)
 	// TODO: Maybe save as private member?
 	std::vector<cv::Mat> LoadImages(int IMREAD_TYPE);
 
-
+	// function to get position and velocity of main drop, as well as number of satellites.
 
 	/*TESTING METHODS**********************************************************************************/
 	bool TestPreProcessing();

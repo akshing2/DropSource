@@ -93,6 +93,21 @@ std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
 	return centers;
 }
 
+float ImageProcessing::MaxImageCentroid_Y(std::vector<cv::Point2f> centroids)
+{
+	float MaxCentroid = -1;
+
+	for (int i = 0; i < centroids.size(); i++)
+	{
+		if (centroids[i].y > MaxCentroid)
+		{
+			MaxCentroid = centroids[i].y;
+		}
+	}
+
+	return MaxCentroid;
+}
+
 cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites)
 {
 	// initialise return processed frame

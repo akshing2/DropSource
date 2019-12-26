@@ -65,6 +65,36 @@ bool DSCLR::DropSourceFrom::Process_Video()
 	return false;
 }
 
+void DSCLR::DropSourceFrom::setWidthAndHeight_Px(float width, float height)
+{
+	this->ImageWidth_Px = width;
+	this->ImageHeight_Px = height;
+}
+
+float DSCLR::DropSourceFrom::Pixels2mm(float data, bool isWidth)
+{
+	float data_mm = 0;
+	float conversion_factor = 0;
+
+	float ROI_Width = (float)(Convert::ToDouble(this->Width_text->Text));	// mm
+	float ROI_Height = (float)(Convert::ToDouble(this->Height_txt->Text));	// mm
+
+	if (isWidth)
+	{
+		// converting width
+		conversion_factor = ROI_Width / this->ImageWidth_Px;				// mm/px
+	}
+	else
+	{
+		// converting height 
+		conversion_factor = ROI_Height / this->ImageHeight_Px;				// mm/px
+	}
+
+	data_mm = data * conversion_factor;										// mm
+
+	return data_mm;
+}
+
 /*IMAGE HANDLING METHODS***************************************************************************/
 
 // returns vector of image in desired load type (ie colour or grayscale)
@@ -73,6 +103,7 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 	std::vector<cv::Mat> images;
 	cv::Mat img;
 	System::String^ col_type;
+	float width, height;
 
 	// Get the filepaths of all the images as a string vector
 	std::vector<std::string> fp_input = file_system::ListOfFiles(UI_ERROR::SYS2std_string(this->InputDir_text->Text));
@@ -121,6 +152,11 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 		
 	}
 
+	// Don't forget to set width and height
+	width = images[0].size().width;
+	height = images[0].size().height;
+	this->setWidthAndHeight_Px(width, height);
+
 	// Finished loading
 	pb_str = "Finished Loading!";
 	this->PB_Label->Text = pb_str;
@@ -135,32 +171,7 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 	return images;
 }
 
-std::vector<cv::Point2f> DSCLR::DropSourceFrom::ImageCentroids(cv::Mat binary_image)
-{
-	std::vector<cv::Point2f> centers;
-	std::vector<std::vector<cv::Point>> Contours;
-	std::vector<cv::Vec4i> Heirarchy;
-	
-	// find contours
-	// Parameters found in python script
-	cv::findContours(binary_image, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
 
-	// Get moments
-	std::vector<cv::Moments> mu(Contours.size());
-	for (int i = 0; i < Contours.size(); i++)
-	{
-		mu[i] = cv::moments(Contours[i], true);
-	}
-
-	// Get Mass centers
-	std::vector<cv::Point2f> mc(Contours.size());
-	for (int i = 0; i < Contours.size(); i++)
-	{
-		mc[i] = cv::Point2f(mu[i].m10 / mu[i].m00, mu[i].m01 / mu[i].m00);
-	}
-
-	return centers;
-}
 
 bool DSCLR::DropSourceFrom::TestPreProcessing()
 {
