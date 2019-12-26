@@ -94,7 +94,7 @@ namespace DSCLR {
 	private: System::Windows::Forms::ProgressBar^ ProgressBar;
 
 	private:
-
+		
 
 
 
@@ -232,9 +232,9 @@ namespace DSCLR {
 				static_cast<System::Byte>(0)));
 			this->OutputDir_label->Location = System::Drawing::Point(19, 428);
 			this->OutputDir_label->Name = L"OutputDir_label";
-			this->OutputDir_label->Size = System::Drawing::Size(195, 29);
+			this->OutputDir_label->Size = System::Drawing::Size(203, 29);
 			this->OutputDir_label->TabIndex = 7;
-			this->OutputDir_label->Text = L"Outpu Directory";
+			this->OutputDir_label->Text = L"Output Directory";
 			this->OutputDir_label->Click += gcnew System::EventHandler(this, &DropSourceFrom::label2_Click_1);
 			// 
 			// NameOfTest_Text
@@ -412,13 +412,14 @@ namespace DSCLR {
 			this->PB_Label->AutoSize = true;
 			this->PB_Label->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->PB_Label->ForeColor = System::Drawing::Color::Red;
+			this->PB_Label->ForeColor = System::Drawing::Color::Blue;
 			this->PB_Label->Location = System::Drawing::Point(233, 533);
 			this->PB_Label->Name = L"PB_Label";
 			this->PB_Label->Size = System::Drawing::Size(121, 29);
 			this->PB_Label->TabIndex = 23;
 			this->PB_Label->Text = L"Error In Test";
 			this->PB_Label->Visible = false;
+			this->PB_Label->Click += gcnew System::EventHandler(this, &DropSourceFrom::PB_Label_Click);
 			// 
 			// ProgressBar
 			// 
@@ -506,52 +507,25 @@ private: System::Void InputDir_button_Click(System::Object^ sender, System::Even
 }
 private: System::Void folderBrowserDialog1_HelpRequest(System::Object^ sender, System::EventArgs^ e) {
 }
-private: System::Void StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e) {
-	bool err = false;
-	
-	if (UI_INPUR_ERROR_CHECK)
-	{
-		err = User_Input_Error_Check();
-	}
+private: System::Void StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e);
 
-	if (!err)
-	{
-		/*if (TEST_OCV) 
-		ImProcTest::test_ocv();
+private: System::Void PB_Label_Click(System::Object^ sender, System::EventArgs^ e) {
 
-		if (TEST_LIST_FILES)
-		file_system::ListOfFiles(UI_ERROR::SYS2std_string(this->InputDir_text->Text));
-
-		if (TEST_PREPROC)
-		{
-			this->PB_Label->Visible = false;
-			bool success = ImProcTest::test_preprocessing(UI_ERROR::SYS2std_string(this->InputDir_text->Text), 
-				UI_ERROR::SYS2std_string(this->OutputDir_text->Text));
-
-			if (success)
-			{
-				this->PB_Label->Text = "Test Success! [test_preprocessing]";
-				this->PB_Label->ForeColor = System::Drawing::Color::Green;
-				
-			}
-			else {
-				this->PB_Label->Text = "Test Failed! [test_preprocessing]";
-				this->PB_Label->ForeColor = System::Drawing::Color::Red;
-			}
-			this->PB_Label->Visible = true;
-		}*/
-
-		if (TEST_DRAW_CONTOURS)
-		{
-			ImProcTest::test_DrawContours(UI_ERROR::SYS2std_string(this->InputDir_text->Text));
-		}
-		
-	}
 }
 
 // Define own methods for the class here
 public:
 	bool User_Input_Error_Check();
+	bool Process_Video();
 
+	/*IMAGE HANDLING METHODS***************************************************************************/
+	// returns vector of image in desired load type (ie colour or grayscale)
+	// TODO: Maybe save as private member?
+	std::vector<cv::Mat> LoadImages(int IMREAD_TYPE);
+
+	/*TESTING METHODS**********************************************************************************/
+	bool TestPreProcessing();
+
+	bool TestDrawContours();
 };
 }

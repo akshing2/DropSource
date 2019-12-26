@@ -26,8 +26,9 @@
 
 #pragma once
 #include <opencv2/opencv.hpp>
+#include <stdlib.h>
 
-#define MAX_SATELLITE_SIZE 5
+#define MAX_SATELLITE_SIZE 7
 
 // Functions to navigate file systems
 namespace file_system
@@ -39,6 +40,12 @@ namespace file_system
 // Image Processing Functions
 namespace ImageProcessing
 {
+	// Read in a single image from specified filepath
+	// @param:
+	//		input_dir	->	Input directory from form
+	//		IMREAD_TYPE	->	Determines how image should be read in (eg colour or grayscale)
+	cv::Mat GetInputImage(std::string input_file, int IMREAD_TYPE);
+
 	// Save a vector of images from input directory
 	// @param:
 	//		input_dir	->	Input directory from form
@@ -66,5 +73,5 @@ namespace ImProcTest
 	// And output preprocessed images in output directory
 	bool test_preprocessing(std::string input_dir, std::string output_dir);
 
-	void test_DrawContours(std::string input_dir);
+	void test_DrawContours(std::string input_dir, std::string output_dir);
 };

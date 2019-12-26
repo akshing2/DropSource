@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <tchar.h>
 #include <stdio.h>
+#include <iostream>
 //#include "DropSourceFrom.h"
 #include  <filesystem>
 
@@ -23,6 +24,13 @@ std::vector<std::string> file_system::ListOfFiles(std::string path)
 	return fpList;
 }
 
+cv::Mat ImageProcessing::GetInputImage(std::string input_file, int IMREAD_TYPE)
+{
+	cv::Mat img = cv::imread(input_file, IMREAD_TYPE);
+
+	return img;
+}
+
 std::vector<cv::Mat> ImageProcessing::get_images(std::string input_dir, int IMREAD_TYPE)
 {
 	std::vector<cv::Mat> images;
@@ -33,7 +41,7 @@ std::vector<cv::Mat> ImageProcessing::get_images(std::string input_dir, int IMRE
 	// iterate through fp_input and save into grayscale images
 	for (std::vector<std::string>::iterator it = fp_input.begin(); it != fp_input.end(); ++it)
 	{
-		img = cv::imread(*it, IMREAD_TYPE);
+		img = GetInputImage(*it, IMREAD_TYPE);
 		images.push_back(img);
 	}
 
@@ -68,6 +76,7 @@ cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool In
 	std::vector<cv::Vec4i> Heirarchy;
 	// Set colour of drawing
 	cv::Scalar colour = Scalar(0, 0, 255);
+	cv::Scalar colour2 = Scalar(0, 255, 0);
 	// radius of center of circle
 	int radius = 2;
 
@@ -103,7 +112,7 @@ cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool In
 		// Draw contours
 		cv::drawContours(cont_img, Contours, i, colour, -1);
 		// Put center of mass on
-		cv::circle(cont_img, mc[i], radius, colour, -1);
+		cv::circle(cont_img, mc[i], radius, colour2, -1);
 	}
 
 	return cont_img;
@@ -149,12 +158,17 @@ bool ImProcTest::test_preprocessing(std::string input_dir, std::string output_di
 	return success;
 }
 
-void ImProcTest::test_DrawContours(std::string input_dir)
+void ImProcTest::test_DrawContours(std::string input_dir, std::string output_dir)
 {
 	std::vector<std::string> fpList = file_system::ListOfFiles(input_dir);
-	bool IncludeStaellites = true;
+	bool IncludeStaellites = false;
 	cv::Mat binary_image;
 	cv::Mat contour_img;
+
+	// Output string 
+	std::string	fpOut = output_dir + std::string("/DrawContour_");
+	std::string fpFull;
+	std::string exten = ".jpg";
 
 	for (int i = 0; i < fpList.size(); i++)
 	{
@@ -169,10 +183,14 @@ void ImProcTest::test_DrawContours(std::string input_dir)
 		{
 			binary_image = ImageProcessing::BinaryThresh(grayscale_images[i]);
 			contour_img = ImageProcessing::DrawContours(binary_image, colour_images[i], IncludeStaellites);
-			
-			cv::imshow("Contoured Image", contour_img);
+
+			fpFull = fpOut + std::to_string(j+1) + exten;
+			//std::cout << "Saving " << fpFull << std::endl;
+		
+			cv::imwrite(fpFull, contour_img);
+			/*cv::imshow("Contoured Image", contour_img);
 			cv::waitKey(0);
-			cv::destroyWindow("Contoured Image");
+			cv::destroyWindow("Contoured Image");*/
 		}
 	}
 }
