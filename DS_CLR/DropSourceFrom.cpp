@@ -6,6 +6,9 @@ using namespace System::Windows::Forms;
 using namespace DSCLR;
 //using namespace UI_ERROR;
 
+// Definitions
+#define MAX_SIM_CROP_ROW	100
+
 // Start of Form Functions
 System::Void DSCLR::DropSourceFrom::StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e)
 {
@@ -78,6 +81,21 @@ float DSCLR::DropSourceFrom::Pixels2mm(float data, bool isWidth)
 	data_mm = data * conversion_factor;										// mm
 
 	return data_mm;
+}
+
+cv::Mat DSCLR::DropSourceFrom::SimCropBinaryImage(cv::Mat bin_image)
+{
+	cv::Mat crop_img = bin_image.clone();
+
+	for (int row = 0; row < MAX_SIM_CROP_ROW; row++)
+	{
+		for (int col = 0; col < crop_img.cols; col++)
+		{
+			crop_img.at<int>(row, col) = 0;
+		}
+	}
+	
+	return crop_img;
 }
 
 /*IMAGE HANDLING METHODS***************************************************************************/
@@ -156,20 +174,87 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 	return images;
 }
 
-std::vector<float> DSCLR::DropSourceFrom::MakeTimeVector(int size)
+void DSCLR::DropSourceFrom::MakeTimeVector(int size)
 {
-	std::vector<float> TimeVector;
+	//std::vector<float> TimeVector;
 
 	float delta_t = 1/((float)(Convert::ToDouble(this->FPS_text->Text)))*1000;
 	int count = 0;
 	float time_t = 0;
 	for (int i = 0; i < size; i++)
 	{
-		TimeVector.push_back(time_t);
+		this->TimeVector->push_back(time_t);
 		time_t += delta_t;
 	}
 
-	return TimeVector;
+}
+
+void DSCLR::DropSourceFrom::UpdateMainDropPosition(float drop_pos_data_px)
+{
+	// Convert to mm first
+	float data_mm = Pixels2mm(drop_pos_data_px, false);
+	// Append to private vector member
+	MainDropPosition->push_back(data_mm);
+}
+
+void DSCLR::DropSourceFrom::UpdateNumberOfSatellites(int num_sat_data)
+{
+	// Append to private vector member
+	NumberOfSatellites->push_back(num_sat_data);
+}
+
+void DSCLR::DropSourceFrom::DropletAnalysis()
+{
+	int MaxDrops = 0;
+	// data is set to -1 to indicate main drop is not detected
+	float DropPosData_px = -1;
+	// init number of satellites to 0
+	int NumSat = 0;
+	// binary image
+	cv::Mat bin_img;
+	// centroids
+	std::vector<cv::Point2f> Centroids;
+
+	// Load grayscale images
+	std::vector<cv::Mat> GrayscaleImages = LoadImages(cv::IMREAD_GRAYSCALE);
+
+	// Loop through grayscale images
+	for (int i = 0; i < GrayscaleImages.size(); i++)
+	{
+		// binary thresholding
+		bin_img = ImageProcessing::BinaryThresh(GrayscaleImages[i]);
+		// find centroids
+		Centroids = ImageProcessing::ImageCentroids(bin_img);
+
+		// Following process to figure out if main drop is on screen
+		if (MaxDrops <= Centroids.size())
+		{
+			// Either main drop has broken into more satellites or just appeared
+			// Record main drop position now
+			DropPosData_px = ImageProcessing::MaxImageCentroid_Y(Centroids);
+			//UpdateMainDropPosition(ImageProcessing::MaxImageCentroid_Y(Centroids));
+
+			// Update number of satellites, remember that one of the centroids is the main drop
+			NumSat = Centroids.size() - 1;
+
+			// update max drops that have been on screen
+			MaxDrops = Centroids.size();
+		}
+		else 
+		{
+			// Main drop has dissapeared or has yet to appear
+			// check if any satellites present
+			NumSat = Centroids.size();
+			DropPosData_px = -1;
+		}
+
+		// update position and number of satellites
+		UpdateMainDropPosition(DropPosData_px);
+		UpdateNumberOfSatellites(NumSat);
+
+		// TODO: Velocity, ligament length, volume
+	}
+
 }
 
 
@@ -248,7 +333,8 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 	std::string input_dir = UI_ERROR::SYS2std_string(this->InputDir_text->Text);
 
 	std::vector<std::string> fpList = file_system::ListOfFiles(input_dir);
-	bool IncludeStaellites = false;
+	bool IncludeStaellites = true;
+	bool NoiseReduction = false;
 	cv::Mat binary_image;
 	cv::Mat contour_img;
 
@@ -281,7 +367,13 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 	for (int j = 0; j < colour_images.size(); j++)
 	{
 		binary_image = ImageProcessing::BinaryThresh(grayscale_images[j]);
-		contour_img = ImageProcessing::DrawContours(binary_image, colour_images[j], IncludeStaellites);
+		
+		if (this->SimulateCrop->Checked)
+		{
+			binary_image = SimCropBinaryImage(binary_image);
+		}
+
+		contour_img = ImageProcessing::DrawContours(binary_image, colour_images[j], IncludeStaellites, NoiseReduction);
 
 		fpFull = fpOut + std::to_string(j + 1) + exten;
 		//std::cout << "Saving " << fpFull << std::endl;
@@ -307,12 +399,12 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 	// end progress bar
 	pb_str = "Success = " + success;
 	this->PB_Label->Text = pb_str;
-
+	this->Update();
 	System::Threading::Thread::Sleep(1000);
 
 	this->ProgressBar->Visible = false;
 	this->PB_Label->Visible = false;
-	this->Update();
+	
 
 	return success;
 }
@@ -324,7 +416,7 @@ bool DSCLR::DropSourceFrom::TestTimeVector()
 
 	int size = imgs.size();
 
-	std::vector<float> timevec = MakeTimeVector(size);
+	MakeTimeVector(size);
 
 	return success;
 }
@@ -350,6 +442,11 @@ void DSCLR::DropSourceFrom::TestFunctions()
 	if (TEST_TIME_VECTOR)
 	{
 		TestTimeVector();
+	}
+
+	if (TEST_DROPLET_ANALYSIS)
+	{
+		DropletAnalysis();
 	}
 }
 

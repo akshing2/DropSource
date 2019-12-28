@@ -61,7 +61,7 @@ cv::Mat ImageProcessing::BinaryThresh(cv::Mat image)
 	// Conduct an adaptive threshold on the droplet.
 	// Parameters may need to be changed.
 	// https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html?highlight=adaptivethreshold
-	cv::adaptiveThreshold(pre_proc, pre_proc, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 11, 2);
+	cv::adaptiveThreshold(pre_proc, pre_proc, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 9, 2);
 
 	return pre_proc;
 }
@@ -108,7 +108,7 @@ float ImageProcessing::MaxImageCentroid_Y(std::vector<cv::Point2f> centroids)
 	return MaxCentroid;
 }
 
-cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites)
+cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites, bool NoiseReduction)
 {
 	// initialise return processed frame
 	cv::Mat cont_img = colr_img.clone();
@@ -143,13 +143,24 @@ cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool In
 	// Draw contours with centroids in them
 	for (int i = 0; i < Contours.size(); i++)
 	{
+		// Remove noise
+		if (NoiseReduction)
+		{
+			if (cv::contourArea(Contours[i]) < MIN_SATELLITE_SIZE)
+			{
+				// remove contour if smaller than satellite
+				Contours.erase(Contours.begin() + i);
+				continue;
+			}
+		}
+		
+
 		// check if you want to include satellites or not
 		if (!IncludeSatellites)
 		{
 			// Less than max satellite size, consider as satellite
 			if (cv::contourArea(Contours[i]) < MAX_SATELLITE_SIZE) {
-				// remove contour if smaller than satellite
-				//Contours.erase(Contours.begin() + i);
+				Contours.erase(Contours.begin() + i);
 				continue;
 			}
 		}
@@ -158,8 +169,8 @@ cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool In
 		// Put center of mass on
 		cv::circle(cont_img, mc[i], radius, colour2, -1);
 		// Label centers
-		std::string cent_str = std::to_string(mc[i].y);
-		cv::putText(cont_img, cent_str, mc[i], cv::FONT_HERSHEY_COMPLEX, 1, colour2);
+		/*std::string cent_str = std::to_string(mc[i].y);
+		cv::putText(cont_img, cent_str, mc[i], cv::FONT_HERSHEY_COMPLEX, 1, colour2);*/
 	}
 
 	return cont_img;
@@ -209,6 +220,7 @@ void ImProcTest::test_DrawContours(std::string input_dir, std::string output_dir
 {
 	std::vector<std::string> fpList = file_system::ListOfFiles(input_dir);
 	bool IncludeStaellites = false;
+	bool NoiseReduction = false;
 	cv::Mat binary_image;
 	cv::Mat contour_img;
 
@@ -229,7 +241,7 @@ void ImProcTest::test_DrawContours(std::string input_dir, std::string output_dir
 		for (int j = 0; j < colour_images.size(); j++)
 		{
 			binary_image = ImageProcessing::BinaryThresh(grayscale_images[i]);
-			contour_img = ImageProcessing::DrawContours(binary_image, colour_images[i], IncludeStaellites);
+			contour_img = ImageProcessing::DrawContours(binary_image, colour_images[i], IncludeStaellites, NoiseReduction);
 
 			fpFull = fpOut + std::to_string(j+1) + exten;
 			//std::cout << "Saving " << fpFull << std::endl;

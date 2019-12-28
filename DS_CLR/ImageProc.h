@@ -22,7 +22,9 @@
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
 
-#define MAX_SATELLITE_SIZE 10
+#define MIN_SATELLITE_SIZE 10
+#define MAX_SATELLITE_SIZE 15
+#define MIN_MAIN_DROP_SIZE 20
 
 // Functions to navigate file systems
 namespace file_system
@@ -56,7 +58,7 @@ namespace ImageProcessing
 	float MaxImageCentroid_Y(std::vector<cv::Point2f> centroids);
 	// Draw Contours
 	// Returns processed image, which is a frame of the high speed video
-	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites);
+	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites, bool NoiseReduction);
 
 	// Contour Image List
 

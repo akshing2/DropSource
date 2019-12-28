@@ -105,9 +105,19 @@ namespace DSCLR {
 	private: System::Windows::Forms::ProgressBar^ ProgressBar;
 
 	// Additional private members
+	// Used for Data Handling
 	private:
 		float ImageWidth_Px;
 		float ImageHeight_Px;
+
+		// Data Sets
+		std::vector<float>* TimeVector;
+		std::vector<float>* MainDropPosition;
+		std::vector<float>* MainDropVelocity;
+		std::vector<int>* NumberOfSatellites;
+	private: System::Windows::Forms::CheckBox^ SimulateCrop;
+
+		   // TODO: Ligament length and Volume
 		
 
 	protected:
@@ -152,6 +162,7 @@ namespace DSCLR {
 			this->Error_Output = (gcnew System::Windows::Forms::Label());
 			this->PB_Label = (gcnew System::Windows::Forms::Label());
 			this->ProgressBar = (gcnew System::Windows::Forms::ProgressBar());
+			this->SimulateCrop = (gcnew System::Windows::Forms::CheckBox());
 			this->SuspendLayout();
 			// 
 			// NameOfTest_label
@@ -424,10 +435,23 @@ namespace DSCLR {
 			this->ProgressBar->ForeColor = System::Drawing::Color::Lime;
 			this->ProgressBar->Location = System::Drawing::Point(238, 565);
 			this->ProgressBar->Name = L"ProgressBar";
-			this->ProgressBar->Size = System::Drawing::Size(641, 29);
+			this->ProgressBar->Size = System::Drawing::Size(441, 29);
 			this->ProgressBar->Style = System::Windows::Forms::ProgressBarStyle::Continuous;
 			this->ProgressBar->TabIndex = 24;
 			this->ProgressBar->Visible = false;
+			// 
+			// SimulateCrop
+			// 
+			this->SimulateCrop->AutoSize = true;
+			this->SimulateCrop->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->SimulateCrop->Location = System::Drawing::Point(475, 204);
+			this->SimulateCrop->Name = L"SimulateCrop";
+			this->SimulateCrop->Size = System::Drawing::Size(166, 29);
+			this->SimulateCrop->TabIndex = 25;
+			this->SimulateCrop->Text = L"Simulate Crop";
+			this->SimulateCrop->UseVisualStyleBackColor = true;
+			this->SimulateCrop->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::SimulateCrop_CheckedChanged);
 			// 
 			// DropSourceFrom
 			// 
@@ -435,6 +459,7 @@ namespace DSCLR {
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::Control;
 			this->ClientSize = System::Drawing::Size(1352, 635);
+			this->Controls->Add(this->SimulateCrop);
 			this->Controls->Add(this->ProgressBar);
 			this->Controls->Add(this->PB_Label);
 			this->Controls->Add(this->Error_Output);
@@ -521,22 +546,26 @@ public:
 	void setWidthAndHeight_Px(float width, float height);
 	// Converter Functions
 	float Pixels2mm(float data, bool isWidth);
+	// Simulate cropping of image (for testing purposes)
+	cv::Mat SimCropBinaryImage(cv::Mat bin_image);
 
 	/*IMAGE HANDLING METHODS***************************************************************************/
-	// returns vector of image in desired load type (ie colour or grayscale)
+	// returns vector of image frames in desired load type (ie colour or grayscale)
 	// TODO: Maybe save as private member?
 	std::vector<cv::Mat> LoadImages(int IMREAD_TYPE);
 
 	// function to get vector of time values of test
 	// Units: ms
-	std::vector<float> MakeTimeVector(int size);
+	void MakeTimeVector(int size);
 	// function to get y position of main drop
-
-	// function to get y velocity of main drop
-
+	void UpdateMainDropPosition(float drop_pos_data_px);
+	// function to get y velocity of main drop (TODO)
+	//void CalculateDropVelocity();
 	// function to get number of satellites
-
+	void UpdateNumberOfSatellites(int num_sat_data);
 	// function to gather all parameter data
+	void DropletAnalysis();
+
 	// TODO: software to write data to csv
 
 	/*TESTING METHODS**********************************************************************************/
@@ -547,5 +576,8 @@ public:
 	bool TestTimeVector();
 
 	void TestFunctions();
+
+private: System::Void SimulateCrop_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+}
 };
 }
