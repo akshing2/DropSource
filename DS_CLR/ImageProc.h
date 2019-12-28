@@ -54,8 +54,9 @@ namespace ImageProcessing
 	// @param:
 	//	binary_image	->	image that has already undergone thresholding
 	std::vector<cv::Point2f> ImageCentroids(cv::Mat binary_image);
+	void DrawCentroids(cv::Mat source, std::vector<cv::Point2f> Centers);
 	// returns maximum y displacement found in vector of centroids
-	float MaxImageCentroid_Y(std::vector<cv::Point2f> centroids);
+	cv::Point2f MaxImageCentroid(std::vector<cv::Point2f> centroids);
 	// Draw Contours
 	// Returns processed image, which is a frame of the high speed video
 	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites, bool NoiseReduction);

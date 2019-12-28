@@ -93,15 +93,30 @@ std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
 	return centers;
 }
 
-float ImageProcessing::MaxImageCentroid_Y(std::vector<cv::Point2f> centroids)
+void ImageProcessing::DrawCentroids(cv::Mat source, std::vector<cv::Point2f> Centers)
 {
-	float MaxCentroid = -1;
+	cv::Scalar red(0, 0, 255);
+	cv::Scalar blue(255, 0, 0);
+	cv::Scalar green(0, 255, 0);
+	int radius = 3;
+
+	for (int i = 0; i < Centers.size(); i++)
+	{
+		cv::circle(source, Centers[i], radius, green, -1);
+		//cv::putText(source, std::to_string(i), Centers[i], cv::FONT_HERSHEY_SCRIPT_COMPLEX, 2, green);
+	}
+}
+
+cv::Point2f ImageProcessing::MaxImageCentroid(std::vector<cv::Point2f> centroids)
+{
+	cv::Point2f MaxCentroid(0, 0);
 
 	for (int i = 0; i < centroids.size(); i++)
 	{
-		if (centroids[i].y > MaxCentroid)
+		if (centroids[i].y > MaxCentroid.y)
 		{
-			MaxCentroid = centroids[i].y;
+			MaxCentroid.y = centroids[i].y;
+			MaxCentroid.x = centroids[i].x;
 		}
 	}
 

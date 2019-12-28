@@ -8,6 +8,8 @@ using namespace DSCLR;
 
 // Definitions
 #define MAX_SIM_CROP_ROW	100
+// Gravitation acceleration constant
+#define g					9.8*1000	// mm/s
 
 // Start of Form Functions
 System::Void DSCLR::DropSourceFrom::StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e)
@@ -83,6 +85,30 @@ float DSCLR::DropSourceFrom::Pixels2mm(float data, bool isWidth)
 	return data_mm;
 }
 
+float DSCLR::DropSourceFrom::mm2Pixel(float data, bool isWidth)
+{
+	float data_px = 0;
+	float conversion_factor = 0;
+
+	float ROI_Width = (float)(Convert::ToDouble(this->Width_text->Text));	// mm
+	float ROI_Height = (float)(Convert::ToDouble(this->Height_txt->Text));	// mm
+
+	if (isWidth)
+	{
+		// converting width
+		conversion_factor = this->ImageWidth_Px/ROI_Width;					// px/mm
+	}
+	else
+	{
+		// converting height 
+		conversion_factor = this->ImageHeight_Px / ROI_Height; 				// px/mm
+	}
+
+	data_px = data * conversion_factor;										// px
+
+	return data_px;
+}
+
 cv::Mat DSCLR::DropSourceFrom::SimCropBinaryImage(cv::Mat bin_image)
 {
 	cv::Mat crop_img = bin_image.clone();
@@ -96,6 +122,28 @@ cv::Mat DSCLR::DropSourceFrom::SimCropBinaryImage(cv::Mat bin_image)
 	}
 	
 	return crop_img;
+}
+
+cv::Point2f DSCLR::DropSourceFrom::PredictNextMainDropPosition(cv::Point2f detected_pos, int index)
+{
+	cv::Point2f pred = detected_pos;
+	cv::Mat bin_image;
+	float delta_t = 1 / ((float)(Convert::ToDouble(this->FPS_text->Text))) * 1000;
+	// can only do calculation if index is greater than 2
+	// otherwise return the same detected position
+	if (index > 2)
+	{
+		bin_image = ImageProcessing::BinaryThresh(GrayscaleImages->at(index - 2));
+		// get previous two positions
+		cv::Point2f rt0 = ImageProcessing::MaxImageCentroid(ImageProcessing::ImageCentroids(bin_image));
+		bin_image = ImageProcessing::BinaryThresh(GrayscaleImages->at(index - 1));
+		cv::Point2f rt1 = ImageProcessing::MaxImageCentroid(ImageProcessing::ImageCentroids(bin_image));
+
+		// predict y position, assume same x
+		pred.y = 2 * rt1.y - rt0.y + mm2Pixel(g*delta_t*delta_t, false);
+	}
+
+	return pred;
 }
 
 /*IMAGE HANDLING METHODS***************************************************************************/
@@ -174,6 +222,25 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 	return images;
 }
 
+void DSCLR::DropSourceFrom::LoadGrayscaleImages()
+{
+	std::vector<cv::Mat> gs = LoadImages(cv::IMREAD_GRAYSCALE);
+	for (int i = 0; i < gs.size(); i++)
+	{
+		GrayscaleImages->push_back(gs[i]);
+	}
+}
+
+void DSCLR::DropSourceFrom::LoadColorImages()
+{
+	std::vector<cv::Mat> cl = LoadImages(cv::IMREAD_COLOR);
+
+	for (int i = 0; i < cl.size(); i++)
+	{
+		ColorImages->push_back(cl[i]);
+	}
+}
+
 void DSCLR::DropSourceFrom::MakeTimeVector(int size)
 {
 	//std::vector<float> TimeVector;
@@ -197,6 +264,85 @@ void DSCLR::DropSourceFrom::UpdateMainDropPosition(float drop_pos_data_px)
 	MainDropPosition->push_back(data_mm);
 }
 
+void DSCLR::DropSourceFrom::MainDropPositions()
+{
+	cv::Point2f detected_centroid;
+	cv::Point2f predicted_centroid;
+	std::vector<cv::Point2f> Centers;
+	cv::Mat bin_img;
+	float halfway_y = this->ImageHeight_Px / 2;
+	bool isMainDrop = false;
+	bool endMainDrop = false;
+
+	System::String^ pb_str = "Detecting Main Drop Positions";
+	ProgressBarUpdate(pb_str, 0, 100, 0, true);
+
+	// Loop through grayscale images
+	for (int i = 0; i < GrayscaleImages->size(); i++)
+	{
+		bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
+		Centers = ImageProcessing::ImageCentroids(bin_img);
+		pb_str = "Main Drop Pos: " + i + "/" + GrayscaleImages->size();
+		//// determine if main drop is on screen
+		//if (Centers.size() > 0 && !endMainDrop)
+		//{
+		//	// just started main drop or continuing main drop
+		//	isMainDrop = true;
+		//} else
+		//{
+		//	isMainDrop = false;
+		//}
+		//
+		//if (!isMainDrop)
+		//{
+		//	// main drop not found
+		//	detected_centroid.x = -1;
+		//	detected_centroid.y = -1;
+		//	predicted_centroid.x = -1;
+		//	predicted_centroid.y = -1;
+		//} else 
+		//{
+		//	// main drop detected
+		//	detected_centroid = ImageProcessing::MaxImageCentroid(Centers);
+		//	
+		//	// prediction
+		//	predicted_centroid = PredictNextMainDropPosition(detected_centroid, i);
+		//	
+
+		//	if (predicted_centroid.y > this->ImageHeight_Px)
+		//	{
+		//		// main drop has gone off screen
+		//		isMainDrop = false;
+		//		endMainDrop = true;
+		//	}
+		//}
+		if (Centers.size() > 0)
+		{
+			detected_centroid = ImageProcessing::MaxImageCentroid(Centers);
+			predicted_centroid = ImageProcessing::MaxImageCentroid(Centers);
+		}
+		else
+		{
+			// main drop not found
+			detected_centroid.x = -1;
+			detected_centroid.y = -1;
+			predicted_centroid.x = -1;
+			predicted_centroid.y = -1;
+		}
+		
+
+		this->MainDropPoints->push_back(detected_centroid);
+		this->MainDropPredic->push_back(predicted_centroid);
+
+		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
+	}
+
+	pb_str = "Finished";
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), true);
+	System::Threading::Thread::Sleep(1000);
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
+}
+
 void DSCLR::DropSourceFrom::UpdateNumberOfSatellites(int num_sat_data)
 {
 	// Append to private vector member
@@ -205,59 +351,166 @@ void DSCLR::DropSourceFrom::UpdateNumberOfSatellites(int num_sat_data)
 
 void DSCLR::DropSourceFrom::DropletAnalysis()
 {
-	int MaxDrops = 0;
-	// data is set to -1 to indicate main drop is not detected
-	float DropPosData_px = -1;
-	// init number of satellites to 0
-	int NumSat = 0;
-	// binary image
-	cv::Mat bin_img;
-	// centroids
-	std::vector<cv::Point2f> Centroids;
+	//int MaxDrops = 0;
+	//// data is set to -1 to indicate main drop is not detected
+	//float DropPosData_px = -1;
+	//// init number of satellites to 0
+	//int NumSat = 0;
+	//// binary image
+	//cv::Mat bin_img;
+	//// centroids
+	//std::vector<cv::Point2f> Centroids;
 
-	// Load grayscale images
-	std::vector<cv::Mat> GrayscaleImages = LoadImages(cv::IMREAD_GRAYSCALE);
+	//// Load grayscale images
+	//std::vector<cv::Mat> GrayscaleImages = LoadImages(cv::IMREAD_GRAYSCALE);
 
-	// Loop through grayscale images
-	for (int i = 0; i < GrayscaleImages.size(); i++)
-	{
-		// binary thresholding
-		bin_img = ImageProcessing::BinaryThresh(GrayscaleImages[i]);
-		// find centroids
-		Centroids = ImageProcessing::ImageCentroids(bin_img);
+	//// Loop through grayscale images
+	//for (int i = 0; i < GrayscaleImages.size(); i++)
+	//{
+	//	// binary thresholding
+	//	bin_img = ImageProcessing::BinaryThresh(GrayscaleImages[i]);
+	//	// find centroids
+	//	Centroids = ImageProcessing::ImageCentroids(bin_img);
 
-		// Following process to figure out if main drop is on screen
-		if (MaxDrops <= Centroids.size())
-		{
-			// Either main drop has broken into more satellites or just appeared
-			// Record main drop position now
-			DropPosData_px = ImageProcessing::MaxImageCentroid_Y(Centroids);
-			//UpdateMainDropPosition(ImageProcessing::MaxImageCentroid_Y(Centroids));
+	//	// Following process to figure out if main drop is on screen
+	//	if (MaxDrops <= Centroids.size())
+	//	{
+	//		// Either main drop has broken into more satellites or just appeared
+	//		// Record main drop position now
+	//		DropPosData_px = ImageProcessing::MaxImageCentroid_Y(Centroids);
+	//		//UpdateMainDropPosition(ImageProcessing::MaxImageCentroid_Y(Centroids));
 
-			// Update number of satellites, remember that one of the centroids is the main drop
-			NumSat = Centroids.size() - 1;
+	//		// Update number of satellites, remember that one of the centroids is the main drop
+	//		NumSat = Centroids.size() - 1;
 
-			// update max drops that have been on screen
-			MaxDrops = Centroids.size();
-		}
-		else 
-		{
-			// Main drop has dissapeared or has yet to appear
-			// check if any satellites present
-			NumSat = Centroids.size();
-			DropPosData_px = -1;
-		}
+	//		// update max drops that have been on screen
+	//		MaxDrops = Centroids.size();
+	//	}
+	//	else 
+	//	{
+	//		// Main drop has dissapeared or has yet to appear
+	//		// check if any satellites present
+	//		NumSat = Centroids.size();
+	//		DropPosData_px = -1;
+	//	}
 
-		// update position and number of satellites
-		UpdateMainDropPosition(DropPosData_px);
-		UpdateNumberOfSatellites(NumSat);
+	//	// update position and number of satellites
+	//	UpdateMainDropPosition(DropPosData_px);
+	//	UpdateNumberOfSatellites(NumSat);
 
-		// TODO: Velocity, ligament length, volume
-	}
+	//	// TODO: Velocity, ligament length, volume
+	//}
 
 }
 
 
+
+void DSCLR::DropSourceFrom::ProgressBarUpdate(System::String^ message, int min, int max, int level, bool visible)
+{
+	this->ProgressBar->Minimum = min;
+	this->ProgressBar->Maximum = max;
+	this->ProgressBar->Value = level;
+	this->ProgressBar->Visible = visible;
+	this->PB_Label->Text = message;
+	this->PB_Label->Visible = visible;
+	this->ProgressBar->Update();
+	this->PB_Label->Update();
+}
+
+void DSCLR::DropSourceFrom::DrawDetectedAndPredictedCenters(bool enablePredic)
+{
+	System::String^ pb_str = "Detect and Predict";
+	// format input and output directories
+	std::string output_dir = UI_ERROR::SYS2std_string(this->OutputDir_text->Text);
+	// Output string 
+	std::string	fpOut = output_dir + std::string("/DetectPredic_");
+	std::string fpFull;
+	std::string exten = ".jpg";
+	cv::Mat drawing;
+	int ProgressVal = 0;
+	int radius = 2;
+	cv::Scalar red = cv::Scalar(0, 0, 255);
+	cv::Scalar green = cv::Scalar(0, 255, 0);
+	bool success = true;
+
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, true);
+
+	for (int i = 0; i < ColorImages->size(); i++)
+	{
+		pb_str = "Drawing Detect/Precidt: " + i + "/" + ColorImages->size();
+		drawing = ColorImages->at(i).clone();
+		
+		if (MainDropPoints->at(i).y != -1)
+		{
+			// draw detected in red
+			cv::circle(drawing, MainDropPoints->at(i), 2, red, 1);
+			// draw predicted in green
+			if (enablePredic)
+			{
+				cv::circle(drawing, MainDropPredic->at(i), 2, green, -1);
+			}
+			
+			// Write image
+			fpFull = fpOut + std::to_string(i + 1) + exten;
+			//std::cout << "Saving " << fpFull << std::endl;
+
+			if (!cv::imwrite(fpFull, drawing))
+			{
+				success = false;
+				break;
+			}
+
+		}
+
+		ProgressBarUpdate(pb_str, 0, ColorImages->size(), i, true);
+	}
+
+	pb_str = "Success = " + success;
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, true);
+	System::Threading::Thread::Sleep(1000);
+
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, false);
+	
+}
+
+void DSCLR::DropSourceFrom::DrawAllCentroids()
+{
+	std::string output_dir = UI_ERROR::SYS2std_string(this->OutputDir_text->Text);
+	// Output string 
+	std::string	fpOut = output_dir + std::string("/DrawContour_");
+	std::string fpFull;
+	std::string exten = ".jpg";
+	cv::Mat bin;
+	cv::Mat src;
+	std::vector<cv::Point2f> Centers;
+	System::String^ pb_str = "Drawing All Centers";
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), 0, true);
+
+	for (int i = 0; i < ColorImages->size(); i++)
+	{
+		pb_str = "Drawing All Centers: " + i + "/" + ColorImages->size();
+		bin = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
+		Centers = ImageProcessing::ImageCentroids(bin);
+		src = ColorImages->at(i).clone();
+		ImageProcessing::DrawCentroids(src, Centers);
+
+		fpFull = fpOut + std::to_string(i + 1) + exten;
+		//std::cout << "Saving " << fpFull << std::endl;
+
+		if (!cv::imwrite(fpFull, src))
+		{
+			//success = false;
+			break;
+		}
+
+		ProgressBarUpdate(pb_str, 0, ColorImages->size(), i, true);
+	}
+
+	pb_str = "Finished";
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), true);
+	System::Threading::Thread::Sleep(1000);
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
+}
 
 bool DSCLR::DropSourceFrom::TestPreProcessing()
 {
@@ -448,6 +701,26 @@ void DSCLR::DropSourceFrom::TestFunctions()
 	{
 		DropletAnalysis();
 	}
+
+	if (TEST_DRAW_DETECT_PREDIC)
+	{
+		TestDetectPredict();
+	}
+}
+
+void DSCLR::DropSourceFrom::TestDetectPredict()
+{
+	bool enablePredic = false;
+	// Load grayscale and color images
+	LoadGrayscaleImages();
+	LoadColorImages();
+
+	// update main droplet positions
+	MainDropPositions();
+
+	// Draw detected and predicted centers
+	DrawDetectedAndPredictedCenters(enablePredic);
+	//DrawAllCentroids();
 }
 
 

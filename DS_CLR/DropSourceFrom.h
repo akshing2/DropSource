@@ -52,6 +52,21 @@ namespace DSCLR {
 			//
 			ImageWidth_Px = 0;
 			ImageHeight_Px = 0;
+
+			// Initialise images
+			// Images
+			GrayscaleImages = new std::vector<cv::Mat>;
+			ColorImages = new std::vector<cv::Mat>;
+
+			// Initialise centers
+			MainDropPoints = new std::vector<cv::Point2f>();
+			MainDropPredic = new std::vector<cv::Point2f>();
+
+			// Initialise dataset
+			TimeVector = new std::vector<float>;
+			MainDropPosition = new std::vector<float>;
+			MainDropVelocity = new std::vector<float>;
+			NumberOfSatellites = new std::vector<int>;
 		}
 
 	protected:
@@ -109,6 +124,14 @@ namespace DSCLR {
 	private:
 		float ImageWidth_Px;
 		float ImageHeight_Px;
+
+		// Images
+		std::vector<cv::Mat>* GrayscaleImages;
+		std::vector<cv::Mat>* ColorImages;
+
+		// Points on image
+		std::vector<cv::Point2f>* MainDropPoints;
+		std::vector<cv::Point2f>* MainDropPredic;
 
 		// Data Sets
 		std::vector<float>* TimeVector;
@@ -546,19 +569,25 @@ public:
 	void setWidthAndHeight_Px(float width, float height);
 	// Converter Functions
 	float Pixels2mm(float data, bool isWidth);
+	float mm2Pixel(float data, bool isWidth);
 	// Simulate cropping of image (for testing purposes)
 	cv::Mat SimCropBinaryImage(cv::Mat bin_image);
+	// Predicts position of main drop at next time instance
+	cv::Point2f PredictNextMainDropPosition(cv::Point2f detected_pos, int index);
 
 	/*IMAGE HANDLING METHODS***************************************************************************/
 	// returns vector of image frames in desired load type (ie colour or grayscale)
 	// TODO: Maybe save as private member?
 	std::vector<cv::Mat> LoadImages(int IMREAD_TYPE);
+	void LoadGrayscaleImages();
+	void LoadColorImages();
 
 	// function to get vector of time values of test
 	// Units: ms
 	void MakeTimeVector(int size);
 	// function to get y position of main drop
 	void UpdateMainDropPosition(float drop_pos_data_px);
+	void MainDropPositions();
 	// function to get y velocity of main drop (TODO)
 	//void CalculateDropVelocity();
 	// function to get number of satellites
@@ -568,6 +597,13 @@ public:
 
 	// TODO: software to write data to csv
 
+	/*GUI HANDLING METHODS*****************************************************************************/
+	void ProgressBarUpdate(System::String^ message, int min, int max, int level, bool visible);
+
+	/*DEBUG METHODS************************************************************************************/
+	void DrawDetectedAndPredictedCenters(bool enablePredic);
+	void DrawAllCentroids();
+
 	/*TESTING METHODS**********************************************************************************/
 	bool TestPreProcessing();
 
@@ -576,6 +612,8 @@ public:
 	bool TestTimeVector();
 
 	void TestFunctions();
+
+	void TestDetectPredict();
 
 private: System::Void SimulateCrop_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 }

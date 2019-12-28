@@ -16,7 +16,8 @@
 #define TEST_OCV				0
 #define TEST_LIST_FILES			0
 #define TEST_PREPROC			0
-#define TEST_DRAW_CONTOURS		1
+#define TEST_DRAW_CONTOURS		0
+#define TEST_DRAW_DETECT_PREDIC	1
 
 // Enable Droplet Analysis Tests
 #define TEST_TIME_VECTOR		0
