@@ -26,7 +26,9 @@
 #include "ImageProc.h"
 #include "UI.h"
 #include "Test_Macro.h"
-//
+#include "pid.h"
+#include "PID_Params.h"
+
 using namespace UI_ERROR;
 
 namespace DSCLR {
@@ -61,6 +63,7 @@ namespace DSCLR {
 			// Initialise centers
 			MainDropPoints = new std::vector<cv::Point2f>();
 			MainDropPredic = new std::vector<cv::Point2f>();
+			MainDropControl = new std::vector<cv::Point2f>();
 
 			// Initialise dataset
 			TimeVector = new std::vector<float>;
@@ -131,6 +134,7 @@ namespace DSCLR {
 
 		// Points on image
 		std::vector<cv::Point2f>* MainDropPoints;
+		std::vector<cv::Point2f>* MainDropControl;
 		std::vector<cv::Point2f>* MainDropPredic;
 
 		// Data Sets
@@ -567,6 +571,8 @@ public:
 	bool Process_Video();
 	// Setter Functions
 	void setWidthAndHeight_Px(float width, float height);
+	// Getter Functions
+	float getDeltaT();
 	// Converter Functions
 	float Pixels2mm(float data, bool isWidth);
 	float mm2Pixel(float data, bool isWidth);

@@ -268,3 +268,8 @@ void ImProcTest::test_DrawContours(std::string input_dir, std::string output_dir
 		}
 	}
 }
+
+cv::Point2f NumericalMethods::ForwardDifference(cv::Point2f rt0, cv::Point2f rt1)
+{
+	return 2 * rt1 - rt0;
+}

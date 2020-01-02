@@ -10,6 +10,8 @@ using namespace DSCLR;
 #define MAX_SIM_CROP_ROW	100
 // Gravitation acceleration constant
 #define g					9.8*1000	// mm/s
+// Error Control Constant
+#define Ep					0.70
 
 // Start of Form Functions
 System::Void DSCLR::DropSourceFrom::StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e)
@@ -59,6 +61,13 @@ void DSCLR::DropSourceFrom::setWidthAndHeight_Px(float width, float height)
 {
 	this->ImageWidth_Px = width;
 	this->ImageHeight_Px = height;
+}
+
+float DSCLR::DropSourceFrom::getDeltaT()
+{
+	float delta_t = 1 / ((float)(Convert::ToDouble(this->FPS_text->Text))) * 1000;
+
+	return delta_t;
 }
 
 float DSCLR::DropSourceFrom::Pixels2mm(float data, bool isWidth)
@@ -128,7 +137,7 @@ cv::Point2f DSCLR::DropSourceFrom::PredictNextMainDropPosition(cv::Point2f detec
 {
 	cv::Point2f pred = detected_pos;
 	cv::Mat bin_image;
-	float delta_t = 1 / ((float)(Convert::ToDouble(this->FPS_text->Text))) * 1000;
+	//float delta_t = 1 / ((float)(Convert::ToDouble(this->FPS_text->Text))) * 1000;
 	// can only do calculation if index is greater than 2
 	// otherwise return the same detected position
 	if (index > 2)
@@ -140,7 +149,9 @@ cv::Point2f DSCLR::DropSourceFrom::PredictNextMainDropPosition(cv::Point2f detec
 		cv::Point2f rt1 = ImageProcessing::MaxImageCentroid(ImageProcessing::ImageCentroids(bin_image));
 
 		// predict y position, assume same x
-		pred.y = 2 * rt1.y - rt0.y + mm2Pixel(g*delta_t*delta_t, false);
+		// Neglect the acceleration due to gravity because each time instant is short
+		// This calculation is done using forward difference method
+		pred.y = 2 * rt1.y - rt0.y; 
 	}
 
 	return pred;
@@ -268,11 +279,17 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 {
 	cv::Point2f detected_centroid;
 	cv::Point2f predicted_centroid;
+	cv::Point2f control_centroid;
 	std::vector<cv::Point2f> Centers;
 	cv::Mat bin_img;
 	float halfway_y = this->ImageHeight_Px / 2;
 	bool isMainDrop = false;
 	bool endMainDrop = false;
+	float delta_t = getDeltaT();
+	double inc;
+
+	// Set up PID control
+	PID pid_pos((double)delta_t, (double)this->ImageHeight_Px, 0, Kp, Kd, Ki);
 
 	System::String^ pb_str = "Detecting Main Drop Positions";
 	ProgressBarUpdate(pb_str, 0, 100, 0, true);
@@ -283,56 +300,61 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
 		Centers = ImageProcessing::ImageCentroids(bin_img);
 		pb_str = "Main Drop Pos: " + i + "/" + GrayscaleImages->size();
-		//// determine if main drop is on screen
-		//if (Centers.size() > 0 && !endMainDrop)
+		// determine if main drop is on screen
+		if (Centers.size() > 0 && !endMainDrop)
+		{
+			// just started main drop or continuing main drop
+			isMainDrop = true;
+		} else
+		{
+			isMainDrop = false;
+		}
+		
+		if (!isMainDrop)
+		{
+			// main drop not found
+			detected_centroid.x = -1;
+			detected_centroid.y = -1;
+			control_centroid = detected_centroid;
+			predicted_centroid.x = -1;
+			predicted_centroid.y = -1;
+		} else 
+		{
+			// main drop detected
+			detected_centroid = ImageProcessing::MaxImageCentroid(Centers);
+			// predictionb calculated based off previous detected centers
+			predicted_centroid = PredictNextMainDropPosition(detected_centroid, i);
+			// Control between detected and predicted
+			inc += pid_pos.calculate(detected_centroid.y, predicted_centroid.y);
+			control_centroid.y = detected_centroid.y + (float)inc;
+			control_centroid.x = detected_centroid.x;
+					
+
+			if (predicted_centroid.y > this->ImageHeight_Px)
+			{
+				// main drop has gone off screen
+				isMainDrop = false;
+				endMainDrop = true;
+			}
+		}
+		//if (Centers.size() > 0)
 		//{
-		//	// just started main drop or continuing main drop
-		//	isMainDrop = true;
-		//} else
-		//{
-		//	isMainDrop = false;
+		//	detected_centroid = ImageProcessing::MaxImageCentroid(Centers);
+		//	predicted_centroid = ImageProcessing::MaxImageCentroid(Centers);
 		//}
-		//
-		//if (!isMainDrop)
+		//else
 		//{
 		//	// main drop not found
 		//	detected_centroid.x = -1;
 		//	detected_centroid.y = -1;
 		//	predicted_centroid.x = -1;
 		//	predicted_centroid.y = -1;
-		//} else 
-		//{
-		//	// main drop detected
-		//	detected_centroid = ImageProcessing::MaxImageCentroid(Centers);
-		//	
-		//	// prediction
-		//	predicted_centroid = PredictNextMainDropPosition(detected_centroid, i);
-		//	
-
-		//	if (predicted_centroid.y > this->ImageHeight_Px)
-		//	{
-		//		// main drop has gone off screen
-		//		isMainDrop = false;
-		//		endMainDrop = true;
-		//	}
 		//}
-		if (Centers.size() > 0)
-		{
-			detected_centroid = ImageProcessing::MaxImageCentroid(Centers);
-			predicted_centroid = ImageProcessing::MaxImageCentroid(Centers);
-		}
-		else
-		{
-			// main drop not found
-			detected_centroid.x = -1;
-			detected_centroid.y = -1;
-			predicted_centroid.x = -1;
-			predicted_centroid.y = -1;
-		}
 		
 
 		this->MainDropPoints->push_back(detected_centroid);
 		this->MainDropPredic->push_back(predicted_centroid);
+		this->MainDropControl->push_back(control_centroid);
 
 		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
 	}
@@ -431,6 +453,7 @@ void DSCLR::DropSourceFrom::DrawDetectedAndPredictedCenters(bool enablePredic)
 	int radius = 2;
 	cv::Scalar red = cv::Scalar(0, 0, 255);
 	cv::Scalar green = cv::Scalar(0, 255, 0);
+	cv::Scalar yellow = cv::Scalar(0, 255, 255);
 	bool success = true;
 
 	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, true);
@@ -448,6 +471,7 @@ void DSCLR::DropSourceFrom::DrawDetectedAndPredictedCenters(bool enablePredic)
 			if (enablePredic)
 			{
 				cv::circle(drawing, MainDropPredic->at(i), 2, green, -1);
+				cv::circle(drawing, MainDropControl->at(i), 2, yellow, -1);
 			}
 			
 			// Write image
@@ -710,7 +734,7 @@ void DSCLR::DropSourceFrom::TestFunctions()
 
 void DSCLR::DropSourceFrom::TestDetectPredict()
 {
-	bool enablePredic = false;
+	bool enablePredic = true;
 	// Load grayscale and color images
 	LoadGrayscaleImages();
 	LoadColorImages();

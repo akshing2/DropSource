@@ -66,6 +66,12 @@ namespace ImageProcessing
 
 };
 
+// Numerical Methods
+namespace NumericalMethods
+{
+	cv::Point2f ForwardDifference(cv::Point2f rt0, cv::Point2f rt1);
+};
+
 // Set of functions for testing image processing functions
 namespace ImProcTest
 {
