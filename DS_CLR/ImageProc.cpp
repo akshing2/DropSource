@@ -71,6 +71,11 @@ std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
 	//std::vector<cv::Point2f> centers;
 	std::vector<std::vector<cv::Point>> Contours;
 	std::vector<cv::Vec4i> Heirarchy;
+	// Get Mass centers
+	std::vector<cv::Point2f> centers;
+	// width of image
+	float half_width = (binary_image.size().width/2);
+	cv::Point2f center;
 
 	// find contours
 	// Parameters found in python script
@@ -83,11 +88,16 @@ std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
 		mu[i] = cv::moments(Contours[i], true);
 	}
 
-	// Get Mass centers
-	std::vector<cv::Point2f> centers(Contours.size());
+	
 	for (int i = 0; i < Contours.size(); i++)
 	{
-		centers[i] = cv::Point2f(mu[i].m10 / mu[i].m00, mu[i].m01 / mu[i].m00);
+		center = cv::Point2f(mu[i].m10 / mu[i].m00, mu[i].m01 / mu[i].m00);
+		if (center.x <= (float)(MAX_AXIAL_DEV * half_width) && center.x >= (float)(MIN_AXIAL_DEV * half_width))
+		{
+			// In range so include in returned centers
+			centers.push_back(center);
+		}
+
 	}
 
 	return centers;
