@@ -19,13 +19,13 @@ At this stage, the app is able to do the following:
 
 1. Run the GUI, with input error checking.
 2. Itterate through selected input directory.
-3. Processfind contours and centroids of drop(s), save each frame as an image in output directory.
-4. Create a time vector based off FPS (Hz) input.
+3. Create a time vector based off FPS (Hz) input.
+4. Determine main droplet position and errors associated with image processing.
+5. Calculate main droplet velocities based off 4.
 
 
 ## TODO
-1. Determine Droplet Position and Velocity.
-2. Count Number of Satellites.
-3. Output frames with time stamp and calculted droplet position/velocity as well as number of satellites. This is purely for the purpose of validation.
-4. Calculate Length of Main Droplet Ligament.
-5. Calculate Volume of Main Droplet.
+1. Count Number of Satellites.
+2. Output frames with time stamp and calculted droplet position/velocity as well as number of satellites. This is purely for the purpose of validation.
+3. Calculate Length of Main Droplet Ligament.
+4. Calculate Volume of Main Droplet.

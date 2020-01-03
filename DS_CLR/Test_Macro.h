@@ -10,7 +10,7 @@
 #pragma once
 
 // Enable UI Error Input
-#define UI_INPUR_ERROR_CHECK	1
+#define UI_INPUR_ERROR_CHECK	0
 
 // Enable Helper Function Tests
 // Enable all tests selected

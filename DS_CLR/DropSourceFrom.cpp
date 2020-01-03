@@ -105,7 +105,7 @@ float DSCLR::DropSourceFrom::getDeltaT()
 
 float DSCLR::DropSourceFrom::Pixels2mm(float data, bool isWidth)
 {
-	float data_mm = 0;
+	float data_mm = -1;
 	float conversion_factor = 0;
 
 	float ROI_Width = (float)(Convert::ToDouble(this->Width_text->Text));	// mm
@@ -122,8 +122,12 @@ float DSCLR::DropSourceFrom::Pixels2mm(float data, bool isWidth)
 		conversion_factor = ROI_Height / this->ImageHeight_Px;				// mm/px
 	}
 
-	data_mm = data * conversion_factor;										// mm
-
+	if (data > -1)
+	{
+		// -1 means invalid data, so if it isnt -1 then do conversion
+		data_mm = data * conversion_factor;										// mm
+	}
+	
 	return data_mm;
 }
 
@@ -390,6 +394,11 @@ void DSCLR::DropSourceFrom::MainDropVelocities()
 	float delta_t = getDeltaT();
 	System::String^ pb_str = "Calculating Main Drop Velocities";
 	ProgressBarUpdate(pb_str, 0, 100, 0, true);
+
+	// first measurement always invalid
+	this->Velocity_px->push_back(Vel);
+	this->MainDropVelocity->push_back(Pixels2mm(Vel.y, false));
+
 	// loop through main droplet positions and calculate velocity
 	for (int i = 1; i < MainDropPoints->size(); i++)
 	{
