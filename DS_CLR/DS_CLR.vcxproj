@@ -137,12 +137,15 @@
   <ItemGroup>
     <ClCompile Include="DropSourceFrom.cpp" />
     <ClCompile Include="ImageProc.cpp" />
+    <ClCompile Include="pid.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DropSourceFrom.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="ImageProc.h" />
+    <ClInclude Include="pid.h" />
+    <ClInclude Include="PID_Params.h" />
     <ClInclude Include="Test_Macro.h" />
     <ClInclude Include="UI.h" />
   </ItemGroup>

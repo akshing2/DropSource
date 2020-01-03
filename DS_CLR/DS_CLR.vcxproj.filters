@@ -21,6 +21,9 @@
     <ClCompile Include="ImageProc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DropSourceFrom.h">
@@ -33,6 +36,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Test_Macro.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PID_Params.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

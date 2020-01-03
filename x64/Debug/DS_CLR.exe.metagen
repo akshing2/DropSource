@@ -19,3 +19,27 @@ Class DSCLR.DropSourceFrom: AutoLayout, AnsiClass, Class, Public, BeforeFieldIni
     Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
   Methods:
     User_Input_Error_Check(): PrivateScope, Public, HideBySig
+    Process_Video(): PrivateScope, Public, HideBySig
+    ClearAllData(): PrivateScope, Public, HideBySig
+    setWidthAndHeight_Px(Single, Single): PrivateScope, Public, HideBySig
+    getDeltaT(): PrivateScope, Public, HideBySig
+    Pixels2mm(Single, Boolean(HasFieldMarshal)): PrivateScope, Public, HideBySig
+    mm2Pixel(Single, Boolean(HasFieldMarshal)): PrivateScope, Public, HideBySig
+    SimCropBinaryImage(Mat*, Mat*): PrivateScope, Public, HideBySig
+    PredictNextMainDropPosition(Point_<float>*, Point_<float>*, Int32): PrivateScope, Public, HideBySig
+    LoadImages(vector<cv::Mat\,std::allocator<cv::Mat> >*, Int32): PrivateScope, Public, HideBySig
+    LoadGrayscaleImages(): PrivateScope, Public, HideBySig
+    LoadColorImages(): PrivateScope, Public, HideBySig
+    MakeTimeVector(Int32): PrivateScope, Public, HideBySig
+    MainDropPositions(): PrivateScope, Public, HideBySig
+    MainDropVelocities(): PrivateScope, Public, HideBySig
+    UpdateNumberOfSatellites(Int32): PrivateScope, Public, HideBySig
+    DropletAnalysis(): PrivateScope, Public, HideBySig
+    ProgressBarUpdate(String, Int32, Int32, Int32, Boolean(HasFieldMarshal)): PrivateScope, Public, HideBySig
+    DrawDetectedAndPredictedCenters(Boolean(HasFieldMarshal)): PrivateScope, Public, HideBySig
+    DrawAllCentroids(): PrivateScope, Public, HideBySig
+    TestPreProcessing(): PrivateScope, Public, HideBySig
+    TestDrawContours(): PrivateScope, Public, HideBySig
+    TestTimeVector(): PrivateScope, Public, HideBySig
+    TestFunctions(): PrivateScope, Public, HideBySig
+    TestDetectPredict(): PrivateScope, Public, HideBySig
