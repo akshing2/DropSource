@@ -65,6 +65,9 @@ namespace DSCLR {
 			MainDropPredic = new std::vector<cv::Point2f>();
 			MainDropControl = new std::vector<cv::Point2f>();
 
+			// initialise pixel velocity
+			Velocity_px = new std::vector<cv::Point2f>();
+
 			// Initialise dataset
 			TimeVector = new std::vector<float>;
 			MainDropPosition = new std::vector<float>;
@@ -137,12 +140,22 @@ namespace DSCLR {
 		std::vector<cv::Point2f>* MainDropControl;
 		std::vector<cv::Point2f>* MainDropPredic;
 
+		// Velocity in terms of pixel position
+		std::vector<cv::Point2f>* Velocity_px;
+
 		// Data Sets
 		std::vector<float>* TimeVector;
 		std::vector<float>* MainDropPosition;
 		std::vector<float>* MainDropVelocity;
 		std::vector<int>* NumberOfSatellites;
-	private: System::Windows::Forms::CheckBox^ SimulateCrop;
+private: System::Windows::Forms::Label^ Parameters_lbl;
+private: System::Windows::Forms::CheckBox^ Position_cbox;
+private: System::Windows::Forms::CheckBox^ Velocity_cbox;
+private: System::Windows::Forms::CheckBox^ Satellites_cbox;
+private: System::Windows::Forms::CheckBox^ LigLength_cbox;
+private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
+
+
 
 		   // TODO: Ligament length and Volume
 		
@@ -189,7 +202,12 @@ namespace DSCLR {
 			this->Error_Output = (gcnew System::Windows::Forms::Label());
 			this->PB_Label = (gcnew System::Windows::Forms::Label());
 			this->ProgressBar = (gcnew System::Windows::Forms::ProgressBar());
-			this->SimulateCrop = (gcnew System::Windows::Forms::CheckBox());
+			this->Parameters_lbl = (gcnew System::Windows::Forms::Label());
+			this->Position_cbox = (gcnew System::Windows::Forms::CheckBox());
+			this->Velocity_cbox = (gcnew System::Windows::Forms::CheckBox());
+			this->Satellites_cbox = (gcnew System::Windows::Forms::CheckBox());
+			this->LigLength_cbox = (gcnew System::Windows::Forms::CheckBox());
+			this->DropVolume_cbox = (gcnew System::Windows::Forms::CheckBox());
 			this->SuspendLayout();
 			// 
 			// NameOfTest_label
@@ -361,7 +379,7 @@ namespace DSCLR {
 			this->StartAnalysis_button->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->StartAnalysis_button->ForeColor = System::Drawing::SystemColors::Control;
-			this->StartAnalysis_button->Location = System::Drawing::Point(24, 542);
+			this->StartAnalysis_button->Location = System::Drawing::Point(24, 653);
 			this->StartAnalysis_button->Name = L"StartAnalysis_button";
 			this->StartAnalysis_button->Size = System::Drawing::Size(179, 52);
 			this->StartAnalysis_button->TabIndex = 16;
@@ -449,7 +467,7 @@ namespace DSCLR {
 			this->PB_Label->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->PB_Label->ForeColor = System::Drawing::Color::Blue;
-			this->PB_Label->Location = System::Drawing::Point(233, 533);
+			this->PB_Label->Location = System::Drawing::Point(233, 644);
 			this->PB_Label->Name = L"PB_Label";
 			this->PB_Label->Size = System::Drawing::Size(121, 29);
 			this->PB_Label->TabIndex = 23;
@@ -460,33 +478,100 @@ namespace DSCLR {
 			// ProgressBar
 			// 
 			this->ProgressBar->ForeColor = System::Drawing::Color::Lime;
-			this->ProgressBar->Location = System::Drawing::Point(238, 565);
+			this->ProgressBar->Location = System::Drawing::Point(238, 676);
 			this->ProgressBar->Name = L"ProgressBar";
 			this->ProgressBar->Size = System::Drawing::Size(441, 29);
 			this->ProgressBar->Style = System::Windows::Forms::ProgressBarStyle::Continuous;
 			this->ProgressBar->TabIndex = 24;
 			this->ProgressBar->Visible = false;
 			// 
-			// SimulateCrop
+			// Parameters_lbl
 			// 
-			this->SimulateCrop->AutoSize = true;
-			this->SimulateCrop->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			this->Parameters_lbl->AutoSize = true;
+			this->Parameters_lbl->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->SimulateCrop->Location = System::Drawing::Point(475, 204);
-			this->SimulateCrop->Name = L"SimulateCrop";
-			this->SimulateCrop->Size = System::Drawing::Size(166, 29);
-			this->SimulateCrop->TabIndex = 25;
-			this->SimulateCrop->Text = L"Simulate Crop";
-			this->SimulateCrop->UseVisualStyleBackColor = true;
-			this->SimulateCrop->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::SimulateCrop_CheckedChanged);
+			this->Parameters_lbl->Location = System::Drawing::Point(19, 553);
+			this->Parameters_lbl->Name = L"Parameters_lbl";
+			this->Parameters_lbl->Size = System::Drawing::Size(141, 29);
+			this->Parameters_lbl->TabIndex = 25;
+			this->Parameters_lbl->Text = L"Parameters";
+			// 
+			// Position_cbox
+			// 
+			this->Position_cbox->AutoSize = true;
+			this->Position_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->Position_cbox->Location = System::Drawing::Point(238, 527);
+			this->Position_cbox->Name = L"Position_cbox";
+			this->Position_cbox->Size = System::Drawing::Size(94, 29);
+			this->Position_cbox->TabIndex = 27;
+			this->Position_cbox->Text = L"Position";
+			this->Position_cbox->UseVisualStyleBackColor = true;
+			this->Position_cbox->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::Position_cbox_CheckedChanged);
+			// 
+			// Velocity_cbox
+			// 
+			this->Velocity_cbox->AutoSize = true;
+			this->Velocity_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->Velocity_cbox->Location = System::Drawing::Point(420, 527);
+			this->Velocity_cbox->Name = L"Velocity_cbox";
+			this->Velocity_cbox->Size = System::Drawing::Size(93, 29);
+			this->Velocity_cbox->TabIndex = 28;
+			this->Velocity_cbox->Text = L"Velocity";
+			this->Velocity_cbox->UseVisualStyleBackColor = true;
+			this->Velocity_cbox->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::Velocity_cbox_CheckedChanged);
+			// 
+			// Satellites_cbox
+			// 
+			this->Satellites_cbox->AutoSize = true;
+			this->Satellites_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->Satellites_cbox->Location = System::Drawing::Point(572, 527);
+			this->Satellites_cbox->Name = L"Satellites_cbox";
+			this->Satellites_cbox->Size = System::Drawing::Size(107, 29);
+			this->Satellites_cbox->TabIndex = 29;
+			this->Satellites_cbox->Text = L"Satelllites";
+			this->Satellites_cbox->UseVisualStyleBackColor = true;
+			// 
+			// LigLength_cbox
+			// 
+			this->LigLength_cbox->AutoSize = true;
+			this->LigLength_cbox->Enabled = false;
+			this->LigLength_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->LigLength_cbox->Location = System::Drawing::Point(238, 577);
+			this->LigLength_cbox->Name = L"LigLength_cbox";
+			this->LigLength_cbox->Size = System::Drawing::Size(164, 29);
+			this->LigLength_cbox->TabIndex = 30;
+			this->LigLength_cbox->Text = L"Ligament Length";
+			this->LigLength_cbox->UseVisualStyleBackColor = true;
+			// 
+			// DropVolume_cbox
+			// 
+			this->DropVolume_cbox->AutoSize = true;
+			this->DropVolume_cbox->Enabled = false;
+			this->DropVolume_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->DropVolume_cbox->Location = System::Drawing::Point(420, 577);
+			this->DropVolume_cbox->Name = L"DropVolume_cbox";
+			this->DropVolume_cbox->Size = System::Drawing::Size(152, 29);
+			this->DropVolume_cbox->TabIndex = 31;
+			this->DropVolume_cbox->Text = L"Droplet Volume";
+			this->DropVolume_cbox->UseVisualStyleBackColor = true;
 			// 
 			// DropSourceFrom
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::Control;
-			this->ClientSize = System::Drawing::Size(1352, 635);
-			this->Controls->Add(this->SimulateCrop);
+			this->ClientSize = System::Drawing::Size(909, 758);
+			this->Controls->Add(this->DropVolume_cbox);
+			this->Controls->Add(this->LigLength_cbox);
+			this->Controls->Add(this->Satellites_cbox);
+			this->Controls->Add(this->Velocity_cbox);
+			this->Controls->Add(this->Position_cbox);
+			this->Controls->Add(this->Parameters_lbl);
 			this->Controls->Add(this->ProgressBar);
 			this->Controls->Add(this->PB_Label);
 			this->Controls->Add(this->Error_Output);
@@ -569,6 +654,8 @@ public:
 	/*HELPER METHODS***********************************************************************************/
 	bool User_Input_Error_Check();
 	bool Process_Video();
+	// Clear all data from previous session
+	void ClearAllData();
 	// Setter Functions
 	void setWidthAndHeight_Px(float width, float height);
 	// Getter Functions
@@ -592,10 +679,9 @@ public:
 	// Units: ms
 	void MakeTimeVector(int size);
 	// function to get y position of main drop
-	void UpdateMainDropPosition(float drop_pos_data_px);
 	void MainDropPositions();
 	// function to get y velocity of main drop (TODO)
-	//void CalculateDropVelocity();
+	void MainDropVelocities();
 	// function to get number of satellites
 	void UpdateNumberOfSatellites(int num_sat_data);
 	// function to gather all parameter data
@@ -622,6 +708,15 @@ public:
 	void TestDetectPredict();
 
 private: System::Void SimulateCrop_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+}
+private: System::Void Velocity_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	this->Position_cbox->Checked = this->Velocity_cbox->Checked;
+}
+private: System::Void Position_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	if (!this->Position_cbox->Checked)
+	{
+		this->Velocity_cbox->Checked = false;
+	}
 }
 };
 }
