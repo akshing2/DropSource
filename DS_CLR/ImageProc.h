@@ -22,9 +22,13 @@
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
 
-#define MIN_SATELLITE_SIZE 10
-#define MAX_SATELLITE_SIZE 15
-#define MIN_MAIN_DROP_SIZE 20
+#define MIN_SATELLITE_SIZE	10
+#define MAX_SATELLITE_SIZE	15
+#define MIN_MAIN_DROP_SIZE	20
+
+#define AXIAL_DEV_ALLOWED	0.50	// 10%
+#define MAX_AXIAL_DEV		(1 + AXIAL_DEV_ALLOWED)
+#define MIN_AXIAL_DEV		(1 - AXIAL_DEV_ALLOWED)
 
 // Functions to navigate file systems
 namespace file_system
