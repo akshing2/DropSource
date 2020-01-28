@@ -433,10 +433,64 @@ void DSCLR::DropSourceFrom::MainDropVelocities()
 	ProgressBarUpdate(pb_str, 0, MainDropPoints->size(), MainDropPoints->size(), false);
 }
 
-void DSCLR::DropSourceFrom::UpdateNumberOfSatellites(int num_sat_data)
+void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 {
-	// Append to private vector member
-	NumberOfSatellites->push_back(num_sat_data);
+	int satellites = 0;
+	std::vector<cv::Point2f> Centers;
+	cv::Mat bin_img;
+	bool isMainDrop = false;
+	bool endMainDrop = false;
+
+
+	System::String^ pb_str = "Detecting Number of Satellites";
+	ProgressBarUpdate(pb_str, 0, 100, 0, true);
+
+	// Loop through grayscale images
+	for (int i = 0; i < GrayscaleImages->size(); i++)
+	{
+		bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
+		Centers = ImageProcessing::ImageCentroids(bin_img);
+		pb_str = "No. Of Satellites: " + i + "/" + GrayscaleImages->size();
+		// determine if main drop is on screen
+		if (Centers.size() > 0 && !endMainDrop)
+		{
+			// just started main drop or continuing main drop
+			isMainDrop = true;
+		}
+		else
+		{
+			isMainDrop = false;
+		}
+
+		if (!isMainDrop)
+		{
+			// main drop not found
+			satellites = Centers.size();
+		}
+		else
+		{
+			// main drop detected
+			// remove one center, which is main drop
+			satellites = int(Centers.size() - 1);
+			cv::Point2f pred = this->MainDropPredic->at(i);
+			if (pred.y > this->ImageHeight_Px)
+			{
+				// main drop has gone off screen
+				isMainDrop = false;
+				endMainDrop = true;
+			}
+		}
+
+		// Save number of satellites
+		NumberOfSatellites->push_back(satellites);
+
+		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
+	}
+
+	pb_str = "Finished";
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), true);
+	System::Threading::Thread::Sleep(1000);
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
 }
 
 void DSCLR::DropSourceFrom::DropletAnalysis()
@@ -464,6 +518,7 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 	if (this->Satellites_cbox->Checked)
 	{
 		// count number of satellites
+		CountNumberOfSatellites();
 	}
 
 	if (this->LigLength_cbox->Checked)

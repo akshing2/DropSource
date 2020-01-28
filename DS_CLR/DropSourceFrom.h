@@ -6,19 +6,18 @@
 *
 *	ImageProc.h		->		Used to do image processing and droplet analysis
 *	UI.h			->		Used to handle user inputs
+*	Test_Macro.h	->		Used for debugging.
 *
 *	AUTHOR:		Akshin Goswami
-*	DATE:		17/12/19
+*	DATE:		28/01/20
 *	VERSION:	0.1.0
 *
 *
 *	TODO:
-*	1. Get a vector of y positions of main droplet
-*	2. Get a vector of y velocity of main droplet
-*	3. Determine number of satellites
-*	4. Place info above on contoured image for validation
-*	5. Determine length of ligament
-*	6. Determine volume of main drop.
+*	1. CSV Writer functions for data output
+*	2. Place info above on contoured image for validation
+*	3. Determine length of ligament
+*	4. Determine volume of main drop.
 */
 
 #pragma once
@@ -683,7 +682,7 @@ public:
 	// function to get y velocity of main drop (TODO)
 	void MainDropVelocities();
 	// function to get number of satellites
-	void UpdateNumberOfSatellites(int num_sat_data);
+	void CountNumberOfSatellites();
 	// function to gather all parameter data
 	void DropletAnalysis();
 
