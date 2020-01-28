@@ -153,6 +153,12 @@ private: System::Windows::Forms::CheckBox^ Velocity_cbox;
 private: System::Windows::Forms::CheckBox^ Satellites_cbox;
 private: System::Windows::Forms::CheckBox^ LigLength_cbox;
 private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
+private: System::Windows::Forms::Label^ OutputFiles_label;
+private: System::Windows::Forms::CheckBox^ CSV_cbox;
+private: System::Windows::Forms::CheckBox^ DebugImg_cbox;
+private: System::Windows::Forms::Label^ Error_OutputFile;
+private: System::Windows::Forms::Label^ Error_SelectParam;
+
 
 
 
@@ -207,6 +213,11 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			this->Satellites_cbox = (gcnew System::Windows::Forms::CheckBox());
 			this->LigLength_cbox = (gcnew System::Windows::Forms::CheckBox());
 			this->DropVolume_cbox = (gcnew System::Windows::Forms::CheckBox());
+			this->OutputFiles_label = (gcnew System::Windows::Forms::Label());
+			this->CSV_cbox = (gcnew System::Windows::Forms::CheckBox());
+			this->DebugImg_cbox = (gcnew System::Windows::Forms::CheckBox());
+			this->Error_OutputFile = (gcnew System::Windows::Forms::Label());
+			this->Error_SelectParam = (gcnew System::Windows::Forms::Label());
 			this->SuspendLayout();
 			// 
 			// NameOfTest_label
@@ -378,7 +389,7 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			this->StartAnalysis_button->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->StartAnalysis_button->ForeColor = System::Drawing::SystemColors::Control;
-			this->StartAnalysis_button->Location = System::Drawing::Point(24, 653);
+			this->StartAnalysis_button->Location = System::Drawing::Point(24, 740);
 			this->StartAnalysis_button->Name = L"StartAnalysis_button";
 			this->StartAnalysis_button->Size = System::Drawing::Size(179, 52);
 			this->StartAnalysis_button->TabIndex = 16;
@@ -466,7 +477,7 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			this->PB_Label->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->PB_Label->ForeColor = System::Drawing::Color::Blue;
-			this->PB_Label->Location = System::Drawing::Point(233, 644);
+			this->PB_Label->Location = System::Drawing::Point(233, 731);
 			this->PB_Label->Name = L"PB_Label";
 			this->PB_Label->Size = System::Drawing::Size(121, 29);
 			this->PB_Label->TabIndex = 23;
@@ -477,7 +488,7 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			// ProgressBar
 			// 
 			this->ProgressBar->ForeColor = System::Drawing::Color::Lime;
-			this->ProgressBar->Location = System::Drawing::Point(238, 676);
+			this->ProgressBar->Location = System::Drawing::Point(238, 763);
 			this->ProgressBar->Name = L"ProgressBar";
 			this->ProgressBar->Size = System::Drawing::Size(441, 29);
 			this->ProgressBar->Style = System::Windows::Forms::ProgressBarStyle::Continuous;
@@ -489,7 +500,7 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			this->Parameters_lbl->AutoSize = true;
 			this->Parameters_lbl->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Parameters_lbl->Location = System::Drawing::Point(19, 553);
+			this->Parameters_lbl->Location = System::Drawing::Point(19, 640);
 			this->Parameters_lbl->Name = L"Parameters_lbl";
 			this->Parameters_lbl->Size = System::Drawing::Size(141, 29);
 			this->Parameters_lbl->TabIndex = 25;
@@ -500,7 +511,7 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			this->Position_cbox->AutoSize = true;
 			this->Position_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Position_cbox->Location = System::Drawing::Point(238, 527);
+			this->Position_cbox->Location = System::Drawing::Point(238, 614);
 			this->Position_cbox->Name = L"Position_cbox";
 			this->Position_cbox->Size = System::Drawing::Size(94, 29);
 			this->Position_cbox->TabIndex = 27;
@@ -513,7 +524,7 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			this->Velocity_cbox->AutoSize = true;
 			this->Velocity_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Velocity_cbox->Location = System::Drawing::Point(420, 527);
+			this->Velocity_cbox->Location = System::Drawing::Point(420, 614);
 			this->Velocity_cbox->Name = L"Velocity_cbox";
 			this->Velocity_cbox->Size = System::Drawing::Size(93, 29);
 			this->Velocity_cbox->TabIndex = 28;
@@ -526,7 +537,7 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			this->Satellites_cbox->AutoSize = true;
 			this->Satellites_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Satellites_cbox->Location = System::Drawing::Point(572, 527);
+			this->Satellites_cbox->Location = System::Drawing::Point(572, 614);
 			this->Satellites_cbox->Name = L"Satellites_cbox";
 			this->Satellites_cbox->Size = System::Drawing::Size(107, 29);
 			this->Satellites_cbox->TabIndex = 29;
@@ -539,7 +550,7 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			this->LigLength_cbox->Enabled = false;
 			this->LigLength_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->LigLength_cbox->Location = System::Drawing::Point(238, 577);
+			this->LigLength_cbox->Location = System::Drawing::Point(238, 664);
 			this->LigLength_cbox->Name = L"LigLength_cbox";
 			this->LigLength_cbox->Size = System::Drawing::Size(164, 29);
 			this->LigLength_cbox->TabIndex = 30;
@@ -552,19 +563,85 @@ private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
 			this->DropVolume_cbox->Enabled = false;
 			this->DropVolume_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->DropVolume_cbox->Location = System::Drawing::Point(420, 577);
+			this->DropVolume_cbox->Location = System::Drawing::Point(420, 664);
 			this->DropVolume_cbox->Name = L"DropVolume_cbox";
 			this->DropVolume_cbox->Size = System::Drawing::Size(152, 29);
 			this->DropVolume_cbox->TabIndex = 31;
 			this->DropVolume_cbox->Text = L"Droplet Volume";
 			this->DropVolume_cbox->UseVisualStyleBackColor = true;
 			// 
+			// OutputFiles_label
+			// 
+			this->OutputFiles_label->AutoSize = true;
+			this->OutputFiles_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->OutputFiles_label->Location = System::Drawing::Point(19, 530);
+			this->OutputFiles_label->Name = L"OutputFiles_label";
+			this->OutputFiles_label->Size = System::Drawing::Size(154, 29);
+			this->OutputFiles_label->TabIndex = 32;
+			this->OutputFiles_label->Text = L"Output Files";
+			// 
+			// CSV_cbox
+			// 
+			this->CSV_cbox->AutoSize = true;
+			this->CSV_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->CSV_cbox->Location = System::Drawing::Point(238, 534);
+			this->CSV_cbox->Name = L"CSV_cbox";
+			this->CSV_cbox->Size = System::Drawing::Size(99, 29);
+			this->CSV_cbox->TabIndex = 33;
+			this->CSV_cbox->Text = L"CSV File";
+			this->CSV_cbox->UseVisualStyleBackColor = true;
+			// 
+			// DebugImg_cbox
+			// 
+			this->DebugImg_cbox->AutoSize = true;
+			this->DebugImg_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->DebugImg_cbox->Location = System::Drawing::Point(414, 532);
+			this->DebugImg_cbox->Name = L"DebugImg_cbox";
+			this->DebugImg_cbox->Size = System::Drawing::Size(145, 29);
+			this->DebugImg_cbox->TabIndex = 34;
+			this->DebugImg_cbox->Text = L"Debug Images";
+			this->DebugImg_cbox->UseVisualStyleBackColor = true;
+			// 
+			// Error_OutputFile
+			// 
+			this->Error_OutputFile->AutoSize = true;
+			this->Error_OutputFile->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->Error_OutputFile->ForeColor = System::Drawing::Color::Red;
+			this->Error_OutputFile->Location = System::Drawing::Point(685, 530);
+			this->Error_OutputFile->Name = L"Error_OutputFile";
+			this->Error_OutputFile->Size = System::Drawing::Size(166, 29);
+			this->Error_OutputFile->TabIndex = 35;
+			this->Error_OutputFile->Text = L"Select Output File";
+			this->Error_OutputFile->Visible = false;
+			// 
+			// Error_SelectParam
+			// 
+			this->Error_SelectParam->AutoSize = true;
+			this->Error_SelectParam->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->Error_SelectParam->ForeColor = System::Drawing::Color::Red;
+			this->Error_SelectParam->Location = System::Drawing::Point(636, 662);
+			this->Error_SelectParam->Name = L"Error_SelectParam";
+			this->Error_SelectParam->Size = System::Drawing::Size(261, 29);
+			this->Error_SelectParam->TabIndex = 36;
+			this->Error_SelectParam->Text = L"Select At Least 1 Parameter ";
+			this->Error_SelectParam->Visible = false;
+			// 
 			// DropSourceFrom
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::Control;
-			this->ClientSize = System::Drawing::Size(909, 758);
+			this->ClientSize = System::Drawing::Size(909, 836);
+			this->Controls->Add(this->Error_SelectParam);
+			this->Controls->Add(this->Error_OutputFile);
+			this->Controls->Add(this->DebugImg_cbox);
+			this->Controls->Add(this->CSV_cbox);
+			this->Controls->Add(this->OutputFiles_label);
 			this->Controls->Add(this->DropVolume_cbox);
 			this->Controls->Add(this->LigLength_cbox);
 			this->Controls->Add(this->Satellites_cbox);

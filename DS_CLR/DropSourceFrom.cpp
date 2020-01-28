@@ -57,6 +57,12 @@ bool DSCLR::DropSourceFrom::User_Input_Error_Check()
 	// check output directory
 	this->Error_Output->Visible = check_non_empty_field(OutputDir_text->Text);
 	if (!err) err = this->Error_Output->Visible;
+	// check output file has been selected
+	this->Error_OutputFile->Visible = !(this->CSV_cbox->Checked + this->DebugImg_cbox->Checked);
+	if (!err) err = this->Error_OutputFile->Visible;
+	// check at least one parameter is checked
+	this->Error_SelectParam->Visible = !(Position_cbox->Checked + Velocity_cbox->Checked + Satellites_cbox->Checked + LigLength_cbox->Checked + DropVolume_cbox->Checked);
+	if (!err) err = this->Error_SelectParam->Visible;
 	return err;
 }
 
