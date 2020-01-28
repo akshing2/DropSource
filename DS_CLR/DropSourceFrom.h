@@ -27,6 +27,7 @@
 #include "Test_Macro.h"
 #include "pid.h"
 #include "PID_Params.h"
+#include "CSVWriter.h"
 
 using namespace UI_ERROR;
 
@@ -72,6 +73,8 @@ namespace DSCLR {
 			MainDropPosition = new std::vector<float>;
 			MainDropVelocity = new std::vector<float>;
 			NumberOfSatellites = new std::vector<int>;
+			LigamentLength = new std::vector<float>;
+			Volume = new std::vector<float>;
 		}
 
 	protected:
@@ -147,6 +150,9 @@ namespace DSCLR {
 		std::vector<float>* MainDropPosition;
 		std::vector<float>* MainDropVelocity;
 		std::vector<int>* NumberOfSatellites;
+		std::vector<float>* LigamentLength;
+		std::vector<float>* Volume;
+
 private: System::Windows::Forms::Label^ Parameters_lbl;
 private: System::Windows::Forms::CheckBox^ Position_cbox;
 private: System::Windows::Forms::CheckBox^ Velocity_cbox;
@@ -543,6 +549,7 @@ private: System::Windows::Forms::Label^ Error_SelectParam;
 			this->Satellites_cbox->TabIndex = 29;
 			this->Satellites_cbox->Text = L"Satelllites";
 			this->Satellites_cbox->UseVisualStyleBackColor = true;
+			this->Satellites_cbox->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::Satellites_cbox_CheckedChanged);
 			// 
 			// LigLength_cbox
 			// 
@@ -763,7 +770,10 @@ public:
 	// function to gather all parameter data
 	void DropletAnalysis();
 
-	// TODO: software to write data to csv
+	// Function to write to CSV file
+	void Write2CSV();
+
+	// TODO: Debug Images Function
 
 	/*GUI HANDLING METHODS*****************************************************************************/
 	void ProgressBarUpdate(System::String^ message, int min, int max, int level, bool visible);
@@ -793,6 +803,14 @@ private: System::Void Position_cbox_CheckedChanged(System::Object^ sender, Syste
 	{
 		this->Velocity_cbox->Checked = false;
 	}
+
+	if (!this->Position_cbox->Checked)
+	{
+		this->Satellites_cbox->Checked = false;
+	}
+}
+private: System::Void Satellites_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	this->Position_cbox->Checked = this->Satellites_cbox->Checked;
 }
 };
 }

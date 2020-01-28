@@ -12,6 +12,8 @@ using namespace DSCLR;
 #define g					9.8*1000	// mm/s
 // Error Control Constant
 #define Ep					0.70
+// Default error value
+#define DEF_ERR				-100
 
 // Start of Form Functions
 System::Void DSCLR::DropSourceFrom::StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e)
@@ -537,6 +539,61 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 		// record droplet volume
 	}
 
+	if (this->CSV_cbox->Checked)
+	{
+		// output to csv file
+		Write2CSV();
+	}
+
+}
+
+void DSCLR::DropSourceFrom::Write2CSV()
+{
+	// instantiate csv obj
+	CSVWriter csv(";");
+	// place holder values of columns for each row
+	float Pos = DEF_ERR;
+	float Vel = DEF_ERR;
+	int NumSat = DEF_ERR;
+	float LigLen = DEF_ERR;
+	float Volume = DEF_ERR;
+	
+
+	// csv sub directory path
+	System::String^ subdir = this->OutputDir_text->Text + "/CSV";
+	//std::string subdir = UI_ERROR::SYS2std_string(this->OutputDir_text->Text) + "/CSV";
+	// make csv sub directory
+	System::IO::Directory::CreateDirectory(subdir);
+	// filepath to save to
+	std::string fp = UI_ERROR::SYS2std_string(subdir + "/" + this->NameOfTest_Text->Text) +
+		".csv";
+
+	// title header string
+	//std::string header = "Position;Velocity;NumberOfSatellites;LigamentLength;Volume";
+	csv.newRow() << "Position" << "Velocity" << "NumberOfSatellites" << "LigamentLength" << "Volume";
+
+	// loop through data and save to csv object
+	System::String^ pb_str = "Writing to CSV";
+	ProgressBarUpdate(pb_str, 0, 100, 0, true);
+	for (int i = 0; i < this->GrayscaleImages->size(); i++)
+	{
+		pb_str = "CSV File: " + i + "/" + GrayscaleImages->size();
+		if (this->Position_cbox->Checked) Pos = this->MainDropPosition->at(i);
+		if (this->Velocity_cbox->Checked) Vel = this->MainDropVelocity->at(i);
+		if (this->Satellites_cbox->Checked) NumSat = this->NumberOfSatellites->at(i);
+		if (this->LigLength_cbox->Checked) LigLen = this->LigamentLength->at(i);
+		if (this->DropVolume_cbox->Checked) Volume = this->Volume->at(i);
+
+		csv.newRow() << Pos << Vel << NumSat << LigLen << Volume;
+		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
+		
+	}
+	pb_str = "Finished";
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), true);
+	System::Threading::Thread::Sleep(1000);
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
+	// write to file
+	csv.writeToFile(fp);
 }
 
 
