@@ -201,6 +201,70 @@ cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool In
 	return cont_img;
 }
 
+std::vector<cv::Rect2f> ImageProcessing::FindBoundingRects(cv::Mat grayscale_img)
+{
+	std::vector<cv::Rect2f> BoundRects;
+	std::vector<std::vector<cv::Point>> Contours;
+	std::vector<cv::Vec4i> Heirarchy;
+	// Set colour of drawing
+	cv::Scalar colour = Scalar(0, 0, 255);
+	cv::Scalar colour2 = Scalar(0, 255, 0);
+	
+	// binary threshold
+	cv::Mat bin_img = BinaryThresh(grayscale_img);
+
+	// find contours
+	// Parameters found in python script
+	cv::findContours(bin_img, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+
+	// polys for bounding rect 
+	std::vector<std::vector<cv::Point2f>> contours_poly(Contours.size());
+
+	// get all bounding rectangles
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		cv::approxPolyDP(Contours[i], contours_poly[i], 3, true);
+		BoundRects.push_back(cv::boundingRect(contours_poly[i]));
+	}
+
+	return BoundRects;
+}
+
+cv::Rect2f ImageProcessing::FindMaxAreaBoundingRect(std::vector<cv::Rect2f> BoundRects)
+{
+	cv::Rect2f MaxRect;
+	float max_area = 0;
+	for (int i = 0; i < BoundRects.size(); i++)
+	{
+		if (BoundRects[i].area() > max_area)
+		{
+			max_area = BoundRects[i].area();
+			MaxRect = BoundRects[i];
+		}
+	}
+
+	return MaxRect;
+}
+
+cv::Mat ImageProcessing::DrawBoundingRects(cv::Mat color_img, std::vector<cv::Rect2f> bound_rects)
+{
+	cv::Scalar red = cv::Scalar(0, 0, 255);
+	cv::Mat drawing = color_img.clone();
+	std::string length_txt = "Length: ";
+	std::string width_txt = "Width: ";
+	cv::Point2f center(10, 500);
+	cv::Point2f center2(10, 700);
+	cv::Rect2f MainRect;
+	
+	// find bounding box with biggest area and assume this is the main droplet
+	MainRect = FindMaxAreaBoundingRect(bound_rects);
+	cv::rectangle(drawing,MainRect.tl(), MainRect.br(), red, 2);
+	cv::putText(drawing, length_txt + std::to_string(MainRect.height), center, cv::FONT_HERSHEY_COMPLEX_SMALL, 2, red);
+	cv::putText(drawing, width_txt + std::to_string(MainRect.width), center, cv::FONT_HERSHEY_COMPLEX_SMALL, 2, red);
+
+	return drawing;
+}
+
 void ImProcTest::test_ocv(void)
 {
 	const char* file = "C:/Users/akshi/Google Drive/Thesis/Thesis A Images/binary_thresholding.jpg";

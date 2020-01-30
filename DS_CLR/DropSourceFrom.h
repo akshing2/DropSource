@@ -781,6 +781,7 @@ public:
 	/*DEBUG METHODS************************************************************************************/
 	void DrawDetectedAndPredictedCenters(bool enablePredic);
 	void DrawAllCentroids();
+	void DrawBoundingRects();
 
 	/*TESTING METHODS**********************************************************************************/
 	bool TestPreProcessing();
@@ -792,6 +793,8 @@ public:
 	void TestFunctions();
 
 	void TestDetectPredict();
+
+	void TestBoundingRect();
 
 private: System::Void SimulateCrop_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 }

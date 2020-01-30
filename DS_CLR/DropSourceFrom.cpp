@@ -707,6 +707,54 @@ void DSCLR::DropSourceFrom::DrawAllCentroids()
 	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
 }
 
+void DSCLR::DropSourceFrom::DrawBoundingRects()
+{
+	System::String^ pb_str = "Draw Bounding Rectangles";
+	// format input and output directories
+	std::string output_dir = UI_ERROR::SYS2std_string(this->OutputDir_text->Text);
+	// Output string 
+	std::string	fpOut = output_dir + std::string("/DrawBoundRects_");
+	std::string fpFull;
+	std::string exten = ".jpg";
+	cv::Mat drawing;
+	int ProgressVal = 0;
+	int radius = 2;
+	cv::Scalar red = cv::Scalar(0, 0, 255);
+	cv::Scalar green = cv::Scalar(0, 255, 0);
+	cv::Scalar yellow = cv::Scalar(0, 255, 255);
+	bool success = true;
+
+	std::vector<cv::Rect2f> BoundRects;
+
+	ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), ProgressVal, true);
+
+	for (int i = 0; i < GrayscaleImages->size(); i++)
+	{
+		pb_str = "Drawing Bounding Rect: " + i + "/" + GrayscaleImages->size();
+		BoundRects = ImageProcessing::FindBoundingRects(GrayscaleImages->at(i));
+		drawing = ImageProcessing::DrawBoundingRects(ColorImages->at(i), BoundRects);
+		
+		// Now save to output directory
+
+		fpFull = fpOut + std::to_string(i + 1) + exten;
+		//std::cout << "Saving " << fpFull << std::endl;
+
+		if (!cv::imwrite(fpFull, drawing))
+		{
+			success = false;
+			break;
+		}
+
+		ProgressBarUpdate(pb_str, 0, ColorImages->size(), i, true);
+	}
+
+	pb_str = "Success = " + success;
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, true);
+	System::Threading::Thread::Sleep(1000);
+
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, false);
+}
+
 bool DSCLR::DropSourceFrom::TestPreProcessing()
 {
 	// format input and output directories
@@ -896,6 +944,11 @@ void DSCLR::DropSourceFrom::TestFunctions()
 	{
 		TestDetectPredict();
 	}
+
+	if (TEST_DRAW_BOUND_RECT)
+	{
+		TestBoundingRect();
+	}
 }
 
 void DSCLR::DropSourceFrom::TestDetectPredict()
@@ -911,6 +964,15 @@ void DSCLR::DropSourceFrom::TestDetectPredict()
 	// Draw detected and predicted centers
 	DrawDetectedAndPredictedCenters(enablePredic);
 	//DrawAllCentroids();
+}
+
+void DSCLR::DropSourceFrom::TestBoundingRect()
+{
+	// load images first
+	LoadGrayscaleImages();
+	LoadColorImages();
+	// draw rects
+	DrawBoundingRects();
 }
 
 

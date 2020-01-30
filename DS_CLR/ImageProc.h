@@ -64,6 +64,12 @@ namespace ImageProcessing
 	// Draw Contours
 	// Returns processed image, which is a frame of the high speed video
 	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites, bool NoiseReduction);
+	// Find Bounding Rectangle
+	std::vector<cv::Rect2f> FindBoundingRects(cv::Mat grayscale_img);
+	// find bounding rectangle with largest area
+	cv::Rect2f FindMaxAreaBoundingRect(std::vector<cv::Rect2f> BoundRects);
+	// Draw Bounding Rectangle
+	cv::Mat DrawBoundingRects(cv::Mat color_img, std::vector<cv::Rect2f> bound_rects);
 
 	// Contour Image List
 
