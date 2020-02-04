@@ -140,6 +140,7 @@
     <ClCompile Include="pid.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CSVWriter.h" />
     <ClInclude Include="DropSourceFrom.h">
       <FileType>CppForm</FileType>
     </ClInclude>
