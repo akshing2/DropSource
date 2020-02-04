@@ -782,19 +782,16 @@ public:
 	void DrawDetectedAndPredictedCenters(bool enablePredic);
 	void DrawAllCentroids();
 	void DrawBoundingRects();
+	void DrawExtBotPoints();
 
 	/*TESTING METHODS**********************************************************************************/
 	bool TestPreProcessing();
-
 	bool TestDrawContours();
-
 	bool TestTimeVector();
-
 	void TestFunctions();
-
 	void TestDetectPredict();
-
 	void TestBoundingRect();
+	void TestExtBotPoints();
 
 private: System::Void SimulateCrop_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 }

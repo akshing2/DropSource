@@ -723,6 +723,7 @@ void DSCLR::DropSourceFrom::DrawBoundingRects()
 	cv::Scalar green = cv::Scalar(0, 255, 0);
 	cv::Scalar yellow = cv::Scalar(0, 255, 255);
 	bool success = true;
+	
 
 	std::vector<cv::Rect2f> BoundRects;
 
@@ -745,6 +746,62 @@ void DSCLR::DropSourceFrom::DrawBoundingRects()
 			break;
 		}
 
+		ProgressBarUpdate(pb_str, 0, ColorImages->size(), i, true);
+	}
+
+	pb_str = "Success = " + success;
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, true);
+	System::Threading::Thread::Sleep(1000);
+
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, false);
+}
+
+void DSCLR::DropSourceFrom::DrawExtBotPoints()
+{
+	System::String^ pb_str = "Draw Bounding Rectangles";
+	// format input and output directories
+	std::string output_dir = UI_ERROR::SYS2std_string(this->OutputDir_text->Text);
+	// Output string 
+	std::string	fpOut = output_dir + std::string("/DrawExtBotPoints_");
+	std::string fpFull;
+	std::string exten = ".jpg";
+	cv::Mat drawing;
+	int ProgressVal = 0;
+	int radius = 2;
+	cv::Scalar red = cv::Scalar(0, 0, 255);
+	cv::Scalar green = cv::Scalar(0, 255, 0);
+	cv::Scalar yellow = cv::Scalar(0, 255, 255);
+	bool success = true;
+	cv::Point2f ExtBot;
+
+
+	ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), ProgressVal, true);
+
+	for (int i = 0; i < this->GrayscaleImages->size(); i++)
+	{
+		pb_str = "Drawing Bounding Rect: " + i + "/" + GrayscaleImages->size();
+		ExtBot = ImageProcessing::FindBottomMostPoint(this->GrayscaleImages->at(i));
+		drawing = this->ColorImages->at(i).clone();
+
+		// legit position
+		if (this->MainDropPoints->at(i).y >= 0)
+		{
+			// bottom most point in green
+			cv::circle(drawing, ExtBot, radius, green, 1);
+			// main drop position in red
+			cv::circle(drawing, this->MainDropPoints->at(i), radius, red, 1);
+
+			// save to output
+			fpFull = fpOut + std::to_string(i + 1) + exten;
+			//std::cout << "Saving " << fpFull << std::endl;
+
+			if (!cv::imwrite(fpFull, drawing))
+			{
+				success = false;
+				break;
+			}
+		}
+		
 		ProgressBarUpdate(pb_str, 0, ColorImages->size(), i, true);
 	}
 
@@ -949,6 +1006,11 @@ void DSCLR::DropSourceFrom::TestFunctions()
 	{
 		TestBoundingRect();
 	}
+
+	if (TEST_EXT_BOT_POINTS)
+	{
+		TestExtBotPoints();
+	}
 }
 
 void DSCLR::DropSourceFrom::TestDetectPredict()
@@ -973,6 +1035,20 @@ void DSCLR::DropSourceFrom::TestBoundingRect()
 	LoadColorImages();
 	// draw rects
 	DrawBoundingRects();
+}
+
+void DSCLR::DropSourceFrom::TestExtBotPoints()
+{
+	// load grayscale images
+	LoadGrayscaleImages();
+	// load colour images
+	LoadColorImages();
+
+	// do main drop points
+	MainDropPositions();
+
+	// draw ext bots
+	DrawExtBotPoints();
 }
 
 

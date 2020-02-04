@@ -40,6 +40,7 @@ namespace file_system
 // Image Processing Functions
 namespace ImageProcessing
 {
+	// PRE-PROCESSING #########################################################################################
 	// Read in a single image from specified filepath
 	// @param:
 	//		input_dir	->	Input directory from form
@@ -53,6 +54,8 @@ namespace ImageProcessing
 	std::vector<cv::Mat> get_images(std::string input_dir, int IMREAD_TYPE);
 	// Preprocessing
 	cv::Mat BinaryThresh(cv::Mat image);
+
+	// MAIN DROP POSITIONS ####################################################################################
 	// returns a vector of mass centers for a single image
 	// note that return values are in pixels and not actual units
 	// @param:
@@ -61,19 +64,25 @@ namespace ImageProcessing
 	void DrawCentroids(cv::Mat source, std::vector<cv::Point2f> Centers);
 	// returns maximum y displacement found in vector of centroids
 	cv::Point2f MaxImageCentroid(std::vector<cv::Point2f> centroids);
+	cv::Point2f FindMainDropPos(cv::Mat grayscale_img);
 	// Draw Contours
 	// Returns processed image, which is a frame of the high speed video
 	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites, bool NoiseReduction);
+
+	// LIGAMENT LENGTH ########################################################################################
 	// Find Bounding Rectangle
 	std::vector<cv::Rect2f> FindBoundingRects(cv::Mat grayscale_img);
 	// find bounding rectangle with largest area
 	cv::Rect2f FindMaxAreaBoundingRect(std::vector<cv::Rect2f> BoundRects);
+	cv::Rect2f FindMainDropRect(cv::Mat grayscale_img);
 	// Draw Bounding Rectangle
 	cv::Mat DrawBoundingRects(cv::Mat color_img, std::vector<cv::Rect2f> bound_rects);
-
-	// Contour Image List
-
-
+	// Find bottom most point of contour
+	cv::Point2f FindBottomMostPoint(cv::Mat grayscale_img);
+	// radius of main drop head
+	float Distance2Points(cv::Point2f p1, cv::Point2f p2);
+	// Calculate length of ligament in picture
+	float LengthOfLigament(cv::Mat grayscale_img);
 };
 
 // Numerical Methods

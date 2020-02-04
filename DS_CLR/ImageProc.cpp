@@ -133,6 +133,19 @@ cv::Point2f ImageProcessing::MaxImageCentroid(std::vector<cv::Point2f> centroids
 	return MaxCentroid;
 }
 
+cv::Point2f ImageProcessing::FindMainDropPos(cv::Mat grayscale_img)
+{
+	cv:Point2f pos;
+
+	cv::Mat bin_img = BinaryThresh(grayscale_img);
+
+	std::vector<cv::Point2f> centers = ImageCentroids(bin_img);
+
+	pos = MaxImageCentroid(centers);
+
+	return pos;
+}
+
 cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites, bool NoiseReduction)
 {
 	// initialise return processed frame
@@ -246,6 +259,17 @@ cv::Rect2f ImageProcessing::FindMaxAreaBoundingRect(std::vector<cv::Rect2f> Boun
 	return MaxRect;
 }
 
+cv::Rect2f ImageProcessing::FindMainDropRect(cv::Mat grayscale_img)
+{
+	cv::Rect2f MainDropRect;
+	std::vector<cv::Rect2f> Rects;
+
+	Rects = FindBoundingRects(grayscale_img);
+	MainDropRect = FindMaxAreaBoundingRect(Rects);
+
+	return MainDropRect;
+}
+
 cv::Mat ImageProcessing::DrawBoundingRects(cv::Mat color_img, std::vector<cv::Rect2f> bound_rects)
 {
 	cv::Scalar red = cv::Scalar(0, 0, 255);
@@ -263,6 +287,76 @@ cv::Mat ImageProcessing::DrawBoundingRects(cv::Mat color_img, std::vector<cv::Re
 	cv::putText(drawing, width_txt + std::to_string(MainRect.width), center, cv::FONT_HERSHEY_COMPLEX_SMALL, 2, red);
 
 	return drawing;
+}
+
+cv::Point2f ImageProcessing::FindBottomMostPoint(cv::Mat grayscale_img)
+{
+	cv::Point2f bottom;
+	std::vector<std::vector<cv::Point>> Contours;
+	std::vector<cv::Point> cnts;
+	std::vector<cv::Vec4i> Heirarchy;
+	cv::Point extBot(-1,-1);
+
+	// binarise image
+	cv::Mat bin_img = BinaryThresh(grayscale_img);
+
+	// find contours
+	cv::findContours(bin_img, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+	if (Contours.size() > 0)
+	{
+		// to get largest of contours
+		cnts = *std::max_element(Contours.begin(), Contours.end(), [](const std::vector<cv::Point>& lhs, const std::vector<cv::Point>& rhs)
+			{
+				return lhs.size() < rhs.size();
+			});
+		// find extreme bottom
+		extBot = *std::max_element(cnts.begin(), cnts.end(), [](const cv::Point& lhs, const cv::Point& rhs)
+			{
+				return lhs.y < rhs.y;
+			});
+	}
+
+	
+	bottom.x = float(extBot.x);
+	bottom.y = float(extBot.y);
+
+	return bottom;
+}
+
+float ImageProcessing::Distance2Points(cv::Point2f p1, cv::Point2f p2)
+{
+	float dist;
+	
+	dist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+
+	return dist;
+}
+
+float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img)
+{
+	float LigLength = -1;
+
+	// 1. find main drop position
+	cv::Point2f pos = FindMainDropPos(grayscale_img);
+
+	// 2. find extreme bottom
+	cv::Point2f ExtBot = FindBottomMostPoint(grayscale_img);
+
+	// 3. find radius of head
+	float HeadRadius = Distance2Points(pos, ExtBot);
+
+	// 4. find bounding rectangle
+	cv::Rect2f Rect = FindMainDropRect(grayscale_img);
+
+	// 5. find edge of head and ligament, p1
+	cv::Point2f p1 = pos;
+	p1.y = p1.y - HeadRadius;
+
+	// 6. find tail end of ligament, p2
+	cv::Point2f p2 = pos;
+	p2.y = p2.y + HeadRadius - Rect.height;
+
+	return LigLength;
 }
 
 void ImProcTest::test_ocv(void)
