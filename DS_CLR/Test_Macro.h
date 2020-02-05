@@ -10,11 +10,11 @@
 #pragma once
 
 // Enable UI Error Input
-#define UI_INPUR_ERROR_CHECK	0
+#define UI_INPUR_ERROR_CHECK	1
 
 // Enable Helper Function Tests
 // Enable all tests selected
-#define TEST_ENABLE				1
+#define TEST_ENABLE				0
 // Select tests to enable below
 #define TEST_OCV				0
 #define TEST_LIST_FILES			0
@@ -22,10 +22,10 @@
 #define TEST_DRAW_CONTOURS		0
 #define TEST_DRAW_DETECT_PREDIC	0
 #define TEST_DRAW_BOUND_RECT	0
-#define TEST_EXT_BOT_POINTS		1
+#define TEST_EXT_BOT_POINTS		0
 // Enable Droplet Analysis Tests
 #define TEST_TIME_VECTOR		0
 #define TEST_DROPLET_ANALYSIS	0
 
 // enable the main loop function
-#define MAIN_ENABLE				0
+#define MAIN_ENABLE				1

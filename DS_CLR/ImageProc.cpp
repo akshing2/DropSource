@@ -356,6 +356,12 @@ float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img)
 	cv::Point2f p2 = pos;
 	p2.y = p2.y + HeadRadius - Rect.height;
 
+	if (Rect.height > HEIGHT_WIDTH_CMP* Rect.width)
+	{
+		// if height much greater than width, calculate ligament
+		LigLength = Distance2Points(p2, p1);
+	}
+
 	return LigLength;
 }
 

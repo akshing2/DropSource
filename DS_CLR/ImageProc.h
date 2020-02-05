@@ -30,6 +30,9 @@
 #define MAX_AXIAL_DEV		(1 + AXIAL_DEV_ALLOWED)
 #define MIN_AXIAL_DEV		(1 - AXIAL_DEV_ALLOWED)
 
+#define HEIGHT_VAL			0.5
+#define HEIGHT_WIDTH_CMP	(1 + HEIGHT_VAL)
+
 // Functions to navigate file systems
 namespace file_system
 {

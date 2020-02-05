@@ -501,6 +501,36 @@ void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
 }
 
+void DSCLR::DropSourceFrom::CalculateLigLength()
+{
+	float LigLen = -1;
+	
+	System::String^ pb_str = "Calculating Length of Ligaments";
+	ProgressBarUpdate(pb_str, 0, 100, 0, true);
+
+	for (int i = 0; i < this->GrayscaleImages->size(); i++)
+	{
+		pb_str = "Ligament Length: " + i + "/" + GrayscaleImages->size();
+
+		if (this->MainDropPoints->at(i).y >= 0)
+		{
+			// main drop exists
+			LigLen = ImageProcessing::LengthOfLigament(this->GrayscaleImages->at(i));
+		}
+
+		// append to lists
+		this->LigamentLength_px->push_back(LigLen);
+		this->LigamentLength->push_back(Pixels2mm(LigLen, false));
+
+		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
+	}
+
+	pb_str = "Finished";
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), true);
+	System::Threading::Thread::Sleep(1000);
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
+}
+
 void DSCLR::DropSourceFrom::DropletAnalysis()
 {
 	// clear everything before proceeding
@@ -532,6 +562,7 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 	if (this->LigLength_cbox->Checked)
 	{
 		// Record ligament length
+		CalculateLigLength();
 	}
 
 	if (this->DropVolume_cbox->Checked)

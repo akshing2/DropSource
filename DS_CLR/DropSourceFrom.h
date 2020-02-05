@@ -68,6 +68,9 @@ namespace DSCLR {
 			// initialise pixel velocity
 			Velocity_px = new std::vector<cv::Point2f>();
 
+			// initialise lig length in pixels
+			LigamentLength_px = new std::vector<float>;
+
 			// Initialise dataset
 			TimeVector = new std::vector<float>;
 			MainDropPosition = new std::vector<float>;
@@ -144,6 +147,9 @@ namespace DSCLR {
 
 		// Velocity in terms of pixel position
 		std::vector<cv::Point2f>* Velocity_px;
+
+		// ligament length in pixels
+		std::vector<float>* LigamentLength_px;
 
 		// Data Sets
 		std::vector<float>* TimeVector;
@@ -554,7 +560,6 @@ private: System::Windows::Forms::Label^ Error_SelectParam;
 			// LigLength_cbox
 			// 
 			this->LigLength_cbox->AutoSize = true;
-			this->LigLength_cbox->Enabled = false;
 			this->LigLength_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->LigLength_cbox->Location = System::Drawing::Point(238, 664);
@@ -563,6 +568,7 @@ private: System::Windows::Forms::Label^ Error_SelectParam;
 			this->LigLength_cbox->TabIndex = 30;
 			this->LigLength_cbox->Text = L"Ligament Length";
 			this->LigLength_cbox->UseVisualStyleBackColor = true;
+			this->LigLength_cbox->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::LigLength_cbox_CheckedChanged);
 			// 
 			// DropVolume_cbox
 			// 
@@ -767,6 +773,8 @@ public:
 	void MainDropVelocities();
 	// function to get number of satellites
 	void CountNumberOfSatellites();
+	// function to calculate ligament length
+	void CalculateLigLength();
 	// function to gather all parameter data
 	void DropletAnalysis();
 
@@ -802,15 +810,15 @@ private: System::Void Position_cbox_CheckedChanged(System::Object^ sender, Syste
 	if (!this->Position_cbox->Checked)
 	{
 		this->Velocity_cbox->Checked = false;
-	}
-
-	if (!this->Position_cbox->Checked)
-	{
 		this->Satellites_cbox->Checked = false;
+		this->LigLength_cbox->Checked = false;
 	}
 }
 private: System::Void Satellites_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 	this->Position_cbox->Checked = this->Satellites_cbox->Checked;
+}
+private: System::Void LigLength_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	this->Position_cbox->Checked = this->LigLength_cbox->Checked;
 }
 };
 }
