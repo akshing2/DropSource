@@ -369,7 +369,7 @@ double ImageProcessing::FindMaxContourArea(cv::Mat grayscale_img)
 {
 	std::vector<std::vector<cv::Point>> Contours;
 	std::vector<cv::Vec4i> Heirarchy;
-	float MaxContourArea = 0;
+	double MaxContourArea = 0;
 
 	// image processing
 	cv::Mat bin_img = BinaryThresh(grayscale_img);
@@ -390,18 +390,31 @@ double ImageProcessing::FindMaxContourArea(cv::Mat grayscale_img)
 	return MaxContourArea;
 }
 
-double ImageProcessing::FindMaxCCArea(cv::Mat Stats)
+int ImageProcessing::FindMaxCCAreaLabel(cv::Mat Stats, int NumLabels)
 {
-	double MaxCCArea;
+	/*double MaxCCArea;
 	double MinCCArea;
 	cv::Point minloc;
 	cv::Point maxloc;
 
 	cv::Mat inspect = Stats.col(4);
 	
-	cv::minMaxLoc(inspect, &MinCCArea, &MaxCCArea, &minloc, &maxloc);
+	cv::minMaxLoc(inspect, &MinCCArea, &MaxCCArea, &minloc, &maxloc);*/
 
-	return MaxCCArea;
+	int MaxCCArea = 0;
+	int MaxCCAreaLabel = -1;
+	cv::Mat inspect = Stats.col(4);
+
+	for (int i = 1; i < NumLabels; i++)
+	{
+		if (inspect.at<int>(i,0) > MaxCCArea)
+		{
+			MaxCCArea = inspect.at<int>(i, 0);
+			MaxCCAreaLabel = i;
+		}
+	}
+
+	return MaxCCAreaLabel;
 }
 
 int ImageProcessing::FindHighestLabel(cv::Mat Centroids, int NumLabels)
@@ -435,19 +448,19 @@ cv::Mat ImageProcessing::MainDropMask(cv::Mat grayscale_img)
 
 	// make mask
 	cv::Mat mask(labelImage.size(), bin_img.type(), cv::Scalar(255));
-	cv::Mat surfSup = stats.col(4) > FindMaxContourArea(grayscale_img);
+	//cv::Mat surfSup = stats.col(4) > FindMaxCCArea(stats, nLabels);
 
 	for (int i = 1; i < nLabels; i++)
 	{
-		if (surfSup.at<uchar>(i, 0))
-		{
-			mask = mask & (labelImage == i);
-		}
-
-		/*if (i == FindHighestLabel(centroids, nLabels))
+		/*if (surfSup.at<uchar>(i, 0))
 		{
 			mask = mask & (labelImage == i);
 		}*/
+
+		if (i == FindMaxCCAreaLabel(stats,nLabels))
+		{
+			mask = mask & (labelImage == i);
+		}
 	}
 
 	cv::Mat r(bin_img.size(), bin_img.type(), cv::Scalar(0));

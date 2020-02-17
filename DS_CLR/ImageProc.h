@@ -90,7 +90,7 @@ namespace ImageProcessing
 	// DROPLET VOLUME #########################################################################################
 	// Find the maximum area of a contour
 	double FindMaxContourArea(cv::Mat grayscale_img);
-	double FindMaxCCArea(cv::Mat Stats);
+	int FindMaxCCAreaLabel(cv::Mat Stats, int NumLabels);
 	// Find label with highest position centroid (in y direction)
 	int FindHighestLabel(cv::Mat Centroids, int NumLabels);
 	// Apply a mask that makes the main drop appear only
