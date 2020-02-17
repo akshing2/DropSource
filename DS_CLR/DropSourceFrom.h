@@ -28,6 +28,7 @@
 #include "pid.h"
 #include "PID_Params.h"
 #include "CSVWriter.h"
+#include "libxl.h"
 
 using namespace UI_ERROR;
 
@@ -170,6 +171,7 @@ private: System::Windows::Forms::CheckBox^ CSV_cbox;
 private: System::Windows::Forms::CheckBox^ DebugImg_cbox;
 private: System::Windows::Forms::Label^ Error_OutputFile;
 private: System::Windows::Forms::Label^ Error_SelectParam;
+private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 
 
 
@@ -230,6 +232,7 @@ private: System::Windows::Forms::Label^ Error_SelectParam;
 			this->DebugImg_cbox = (gcnew System::Windows::Forms::CheckBox());
 			this->Error_OutputFile = (gcnew System::Windows::Forms::Label());
 			this->Error_SelectParam = (gcnew System::Windows::Forms::Label());
+			this->XLSX_cbox = (gcnew System::Windows::Forms::CheckBox());
 			this->SuspendLayout();
 			// 
 			// NameOfTest_label
@@ -599,19 +602,20 @@ private: System::Windows::Forms::Label^ Error_SelectParam;
 			this->CSV_cbox->AutoSize = true;
 			this->CSV_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->CSV_cbox->Location = System::Drawing::Point(238, 534);
+			this->CSV_cbox->Location = System::Drawing::Point(475, 532);
 			this->CSV_cbox->Name = L"CSV_cbox";
 			this->CSV_cbox->Size = System::Drawing::Size(99, 29);
 			this->CSV_cbox->TabIndex = 33;
 			this->CSV_cbox->Text = L"CSV File";
 			this->CSV_cbox->UseVisualStyleBackColor = true;
+			this->CSV_cbox->Visible = false;
 			// 
 			// DebugImg_cbox
 			// 
 			this->DebugImg_cbox->AutoSize = true;
 			this->DebugImg_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->DebugImg_cbox->Location = System::Drawing::Point(414, 532);
+			this->DebugImg_cbox->Location = System::Drawing::Point(321, 530);
 			this->DebugImg_cbox->Name = L"DebugImg_cbox";
 			this->DebugImg_cbox->Size = System::Drawing::Size(145, 29);
 			this->DebugImg_cbox->TabIndex = 34;
@@ -644,12 +648,25 @@ private: System::Windows::Forms::Label^ Error_SelectParam;
 			this->Error_SelectParam->Text = L"Select At Least 1 Parameter ";
 			this->Error_SelectParam->Visible = false;
 			// 
+			// XLSX_cbox
+			// 
+			this->XLSX_cbox->AutoSize = true;
+			this->XLSX_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->XLSX_cbox->Location = System::Drawing::Point(238, 530);
+			this->XLSX_cbox->Name = L"XLSX_cbox";
+			this->XLSX_cbox->Size = System::Drawing::Size(60, 29);
+			this->XLSX_cbox->TabIndex = 37;
+			this->XLSX_cbox->Text = L"xlsx";
+			this->XLSX_cbox->UseVisualStyleBackColor = true;
+			// 
 			// DropSourceFrom
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::Control;
 			this->ClientSize = System::Drawing::Size(909, 836);
+			this->Controls->Add(this->XLSX_cbox);
 			this->Controls->Add(this->Error_SelectParam);
 			this->Controls->Add(this->Error_OutputFile);
 			this->Controls->Add(this->DebugImg_cbox);
@@ -778,6 +795,8 @@ public:
 	// function to gather all parameter data
 	void DropletAnalysis();
 
+	// Function to write to xlsx file
+	void Write2XLSX();
 	// Function to write to CSV file
 	void Write2CSV();
 

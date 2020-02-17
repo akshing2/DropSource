@@ -60,7 +60,7 @@ bool DSCLR::DropSourceFrom::User_Input_Error_Check()
 	this->Error_Output->Visible = check_non_empty_field(OutputDir_text->Text);
 	if (!err) err = this->Error_Output->Visible;
 	// check output file has been selected
-	this->Error_OutputFile->Visible = !(this->CSV_cbox->Checked + this->DebugImg_cbox->Checked);
+	this->Error_OutputFile->Visible = !(this->CSV_cbox->Checked + this->DebugImg_cbox->Checked + this->XLSX_cbox->Checked);
 	if (!err) err = this->Error_OutputFile->Visible;
 	// check at least one parameter is checked
 	this->Error_SelectParam->Visible = !(Position_cbox->Checked + Velocity_cbox->Checked + Satellites_cbox->Checked + LigLength_cbox->Checked + DropVolume_cbox->Checked);
@@ -540,6 +540,8 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 	LoadGrayscaleImages();
 	LoadColorImages();
 	
+	MakeTimeVector(this->GrayscaleImages->size());
+
 	if (this->Position_cbox->Checked)
 	{
 		// do position analysis
@@ -570,12 +572,108 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 		// record droplet volume
 	}
 
+	
+	if (this->XLSX_cbox->Checked)
+	{
+		// write to excel file
+		Write2XLSX();
+	}
+
 	if (this->CSV_cbox->Checked)
 	{
 		// output to csv file
 		Write2CSV();
 	}
 
+}
+
+void DSCLR::DropSourceFrom::Write2XLSX()
+{
+	libxl::Book* wbook = xlCreateXMLBook();
+	bool success = false;
+	int ParamCol[6] = {0, 1, 2, 3, 4, 5};
+	System::String^ pb_str = "Writing to XLSX";
+	if (wbook)
+	{
+		success = true;
+
+		// create folder where file is saved
+		System::String^ subdir = this->OutputDir_text->Text + "/XLSX";
+		// make csv sub directory
+		System::IO::Directory::CreateDirectory(subdir);
+		// filepath to save to
+		std::string fp = UI_ERROR::SYS2std_string(subdir + "/" + this->NameOfTest_Text->Text) + ".xlsx";
+
+		// make sheet for workbook
+		libxl::Sheet* sheet = wbook->addSheet(L"Sheet1");
+		if (!sheet)
+		{
+			success = false;
+		}
+		else {
+			// Make the worksheet and fill with values from test
+
+			// make title header for spreadsheet
+			sheet->writeStr(1, ParamCol[0], L"Time (ms)");
+			sheet->writeStr(1, ParamCol[1], L"Position (mm)");
+			sheet->writeStr(1, ParamCol[2], L"Velocity (mm/s)");
+			sheet->writeStr(1, ParamCol[3], L"Number of Satellites");
+			sheet->writeStr(1, ParamCol[4], L"Ligament Length (mm)");
+			sheet->writeStr(1, ParamCol[5], L"Volme of Droplet (mm^3)");
+
+			// loop through data and add
+			
+			ProgressBarUpdate(pb_str, 0, 100, 0, true);
+			for (int row = 0; row < this->GrayscaleImages->size(); row++)
+			{
+				sheet->writeNum(row + 2, ParamCol[0], this->TimeVector->at(row));
+
+				// always add position as this is always needed
+				sheet->writeNum(row + 2, ParamCol[1], this->MainDropPosition->at(row));
+
+				// add velocity if requested
+				if (this->Velocity_cbox->Checked)
+				{
+					sheet->writeNum(row + 2, ParamCol[2], this->MainDropVelocity->at(row));
+				}
+
+				// add number of satellites if requested
+				if (this->Satellites_cbox->Checked)
+				{
+					sheet->writeNum(row + 2, ParamCol[3], this->NumberOfSatellites->at(row));
+				}
+
+				// add ligament length if requested
+				if (this->LigLength_cbox->Checked)
+				{
+					sheet->writeNum(row + 2, ParamCol[4], this->LigamentLength->at(row));
+				}
+
+				// add drop volume if requested
+				if (this->DropVolume_cbox->Checked)
+				{
+					sheet->writeNum(row + 2, ParamCol[5], this->Volume->at(row));
+				}
+				pb_str = "CSV File: " + row + "/" + GrayscaleImages->size();
+				ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), row, true);
+			}
+		}
+		
+		pb_str = "Finished. Success = " + success;
+		ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), true);
+		System::Threading::Thread::Sleep(1000);
+		ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
+		// write to file
+
+		if (success)
+		{
+			std::wstring wfp(fp.begin(), fp.end());
+			wbook->save(wfp.c_str());
+			wbook->release();
+		}
+		
+
+	}
 }
 
 void DSCLR::DropSourceFrom::Write2CSV()
