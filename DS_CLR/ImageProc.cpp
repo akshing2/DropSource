@@ -365,6 +365,99 @@ float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img)
 	return LigLength;
 }
 
+double ImageProcessing::FindMaxContourArea(cv::Mat grayscale_img)
+{
+	std::vector<std::vector<cv::Point>> Contours;
+	std::vector<cv::Vec4i> Heirarchy;
+	float MaxContourArea = 0;
+
+	// image processing
+	cv::Mat bin_img = BinaryThresh(grayscale_img);
+
+	// find contours
+	// Parameters found in python script
+	cv::findContours(bin_img, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+
+	// itterate through contours and find the max area contour
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		if (cv::contourArea(Contours[i]) > MaxContourArea)
+		{
+			MaxContourArea = cv::contourArea(Contours[i]);
+		}
+	}
+
+	return MaxContourArea;
+}
+
+double ImageProcessing::FindMaxCCArea(cv::Mat Stats)
+{
+	double MaxCCArea;
+	double MinCCArea;
+	cv::Point minloc;
+	cv::Point maxloc;
+
+	cv::Mat inspect = Stats.col(4);
+	
+	cv::minMaxLoc(inspect, &MinCCArea, &MaxCCArea, &minloc, &maxloc);
+
+	return MaxCCArea;
+}
+
+int ImageProcessing::FindHighestLabel(cv::Mat Centroids, int NumLabels)
+{
+	int HighestLabel = -1;
+	double HighestPos = 0;
+
+	for (int i = 1; i < NumLabels; i++)
+	{
+		if (Centroids.at<double>(i, 1) > HighestPos)
+		{
+			HighestPos = Centroids.at<double>(i, 1);
+			HighestLabel = i;
+		}
+	}
+
+	return HighestLabel;
+}
+
+
+cv::Mat ImageProcessing::MainDropMask(cv::Mat grayscale_img)
+{
+	// for connected components
+	cv::Mat stats, centroids, labelImage;
+
+	// binarize image
+	cv::Mat bin_img = BinaryThresh(grayscale_img);
+
+	// connected components
+	int nLabels = cv::connectedComponentsWithStats(bin_img, labelImage, stats, centroids, 4);
+
+	// make mask
+	cv::Mat mask(labelImage.size(), bin_img.type(), cv::Scalar(255));
+	cv::Mat surfSup = stats.col(4) > FindMaxContourArea(grayscale_img);
+
+	for (int i = 1; i < nLabels; i++)
+	{
+		if (surfSup.at<uchar>(i, 0))
+		{
+			mask = mask & (labelImage == i);
+		}
+
+		/*if (i == FindHighestLabel(centroids, nLabels))
+		{
+			mask = mask & (labelImage == i);
+		}*/
+	}
+
+	cv::Mat r(bin_img.size(), bin_img.type(), cv::Scalar(0));
+	bin_img.copyTo(r, mask);
+
+	//cv::Mat r = labelImage;
+
+	return r;
+}
+
 void ImProcTest::test_ocv(void)
 {
 	const char* file = "C:/Users/akshi/Google Drive/Thesis/Thesis A Images/binary_thresholding.jpg";

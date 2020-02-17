@@ -810,6 +810,7 @@ public:
 	void DrawAllCentroids();
 	void DrawBoundingRects();
 	void DrawExtBotPoints();
+	void DrawMainDropMask();
 
 	/*TESTING METHODS**********************************************************************************/
 	bool TestPreProcessing();
@@ -819,6 +820,7 @@ public:
 	void TestDetectPredict();
 	void TestBoundingRect();
 	void TestExtBotPoints();
+	void TestMainDropMask();
 
 private: System::Void SimulateCrop_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 }

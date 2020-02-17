@@ -941,6 +941,59 @@ void DSCLR::DropSourceFrom::DrawExtBotPoints()
 	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, false);
 }
 
+void DSCLR::DropSourceFrom::DrawMainDropMask()
+{
+	System::String^ pb_str = "Draw Main Drop Mask";
+	// format input and output directories
+	std::string output_dir = UI_ERROR::SYS2std_string(this->OutputDir_text->Text);
+	// Output string 
+	std::string	fpOut = output_dir + std::string("/DrawMainDropMask_");
+	std::string fpFull;
+	std::string exten = ".jpg";
+	cv::Mat drawing;
+	int ProgressVal = 0;
+	int radius = 2;
+	cv::Scalar red = cv::Scalar(0, 0, 255);
+	cv::Scalar green = cv::Scalar(0, 255, 0);
+	cv::Scalar yellow = cv::Scalar(0, 255, 255);
+	bool success = true;
+	cv::Point2f ExtBot;
+
+
+	ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), ProgressVal, true);
+
+	for (int i = 0; i < this->GrayscaleImages->size(); i++)
+	{
+		if (i > 66)
+		{
+			std::cout << "Stuff" << std::endl;
+		}
+
+		pb_str = "Drawing Main Drop Mask: " + i + "/" + GrayscaleImages->size();
+		drawing = ImageProcessing::MainDropMask(this->GrayscaleImages->at(i));
+
+		// save to output
+		fpFull = fpOut + std::to_string(i + 1) + exten;
+		//std::cout << "Saving " << fpFull << std::endl;
+		
+		
+
+		if (!cv::imwrite(fpFull, drawing))
+		{
+			success = false;
+			break;
+		}
+
+		ProgressBarUpdate(pb_str, 0, this->GrayscaleImages->size(), i, true);
+	}
+
+	pb_str = "Success = " + success;
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, true);
+	System::Threading::Thread::Sleep(1000);
+
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ProgressVal, false);
+}
+
 bool DSCLR::DropSourceFrom::TestPreProcessing()
 {
 	// format input and output directories
@@ -976,7 +1029,7 @@ bool DSCLR::DropSourceFrom::TestPreProcessing()
 		// binarise image
 		preproc_img = ImageProcessing::BinaryThresh(grayscale_images[i]);
 		// filename
-		fpFull = fpOut + std::to_string(counter) + exten;
+		fpFull = fpOut + std::to_string(i) + exten;
 		// write to output directory
 		if (!cv::imwrite(fpFull, preproc_img))
 		{
@@ -1140,6 +1193,11 @@ void DSCLR::DropSourceFrom::TestFunctions()
 	{
 		TestExtBotPoints();
 	}
+
+	if (TEST_DRAW_MAIN_DROP_MASK)
+	{
+		TestMainDropMask();
+	}
 }
 
 void DSCLR::DropSourceFrom::TestDetectPredict()
@@ -1178,6 +1236,16 @@ void DSCLR::DropSourceFrom::TestExtBotPoints()
 
 	// draw ext bots
 	DrawExtBotPoints();
+}
+
+void DSCLR::DropSourceFrom::TestMainDropMask()
+{
+	// load grayscale images
+	LoadGrayscaleImages();
+
+	// main drop mask imgs
+	DrawMainDropMask();
+	
 }
 
 

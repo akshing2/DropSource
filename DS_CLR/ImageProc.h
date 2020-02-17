@@ -86,6 +86,16 @@ namespace ImageProcessing
 	float Distance2Points(cv::Point2f p1, cv::Point2f p2);
 	// Calculate length of ligament in picture
 	float LengthOfLigament(cv::Mat grayscale_img);
+
+	// DROPLET VOLUME #########################################################################################
+	// Find the maximum area of a contour
+	double FindMaxContourArea(cv::Mat grayscale_img);
+	double FindMaxCCArea(cv::Mat Stats);
+	// Find label with highest position centroid (in y direction)
+	int FindHighestLabel(cv::Mat Centroids, int NumLabels);
+	// Apply a mask that makes the main drop appear only
+	cv::Mat MainDropMask(cv::Mat grayscale_img);
+	// Calculate the droplet volume
 };
 
 // Numerical Methods
