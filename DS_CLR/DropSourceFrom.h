@@ -576,7 +576,6 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// DropVolume_cbox
 			// 
 			this->DropVolume_cbox->AutoSize = true;
-			this->DropVolume_cbox->Enabled = false;
 			this->DropVolume_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->DropVolume_cbox->Location = System::Drawing::Point(420, 664);
@@ -585,6 +584,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->DropVolume_cbox->TabIndex = 31;
 			this->DropVolume_cbox->Text = L"Droplet Volume";
 			this->DropVolume_cbox->UseVisualStyleBackColor = true;
+			this->DropVolume_cbox->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::DropVolume_cbox_CheckedChanged);
 			// 
 			// OutputFiles_label
 			// 
@@ -792,6 +792,8 @@ public:
 	void CountNumberOfSatellites();
 	// function to calculate ligament length
 	void CalculateLigLength();
+	// function to calculate main drop volume
+	void CalculateMainDropVol();
 	// function to gather all parameter data
 	void DropletAnalysis();
 
@@ -833,6 +835,7 @@ private: System::Void Position_cbox_CheckedChanged(System::Object^ sender, Syste
 		this->Velocity_cbox->Checked = false;
 		this->Satellites_cbox->Checked = false;
 		this->LigLength_cbox->Checked = false;
+		this->DropVolume_cbox->Checked = false;
 	}
 }
 private: System::Void Satellites_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
@@ -841,5 +844,9 @@ private: System::Void Satellites_cbox_CheckedChanged(System::Object^ sender, Sys
 private: System::Void LigLength_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 	this->Position_cbox->Checked = this->LigLength_cbox->Checked;
 }
+private: System::Void DropVolume_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	this->Position_cbox->Checked = this->DropVolume_cbox->Checked;
+}
+
 };
 }

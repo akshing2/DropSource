@@ -95,7 +95,10 @@ namespace ImageProcessing
 	int FindHighestLabel(cv::Mat Centroids, int NumLabels);
 	// Apply a mask that makes the main drop appear only
 	cv::Mat MainDropMask(cv::Mat grayscale_img);
+	// Calculate diameter of each level
+	int CalculateDiameter(cv::Mat main_drop_row);
 	// Calculate the droplet volume
+	float MainDropVolume(cv::Mat main_drop_img, float img_width, float img_height);
 };
 
 // Numerical Methods

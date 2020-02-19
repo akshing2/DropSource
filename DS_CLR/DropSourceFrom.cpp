@@ -531,6 +531,42 @@ void DSCLR::DropSourceFrom::CalculateLigLength()
 	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
 }
 
+void DSCLR::DropSourceFrom::CalculateMainDropVol()
+{
+	float MainDropVol = -1;
+
+	System::String^ pb_str = "Calculating Volume of Main Drop";
+	ProgressBarUpdate(pb_str, 0, 100, 0, true);
+
+	float ROI_Width = (float)(Convert::ToDouble(this->Width_text->Text));	// mm
+	float ROI_Height = (float)(Convert::ToDouble(this->Height_txt->Text));	// mm
+	cv::Mat MainDropImg;
+
+	for (int i = 0; i < this->GrayscaleImages->size(); i++)
+	{
+		pb_str = "Drop Volume: " + i + "/" + GrayscaleImages->size();
+		MainDropVol = -1;
+
+		if (this->MainDropPoints->at(i).y >= 0)
+		{
+			// main drop exists
+			// mask
+			MainDropImg = ImageProcessing::MainDropMask(this->GrayscaleImages->at(i));
+			MainDropVol = ImageProcessing::MainDropVolume(MainDropImg, ROI_Width, ROI_Height);
+		}
+
+		// append to lists
+		this->Volume->push_back(MainDropVol);
+
+		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
+	}
+
+	pb_str = "Finished";
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), true);
+	System::Threading::Thread::Sleep(1000);
+	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
+}
+
 void DSCLR::DropSourceFrom::DropletAnalysis()
 {
 	// clear everything before proceeding
@@ -570,6 +606,7 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 	if (this->DropVolume_cbox->Checked)
 	{
 		// record droplet volume
+		CalculateMainDropVol();
 	}
 
 	

@@ -5,6 +5,7 @@
 #include <iostream>
 //#include "DropSourceFrom.h"
 #include  <filesystem>
+#define PI	3.14159265358979323846
 
 namespace fs = std::filesystem;
 using namespace cv;
@@ -469,6 +470,65 @@ cv::Mat ImageProcessing::MainDropMask(cv::Mat grayscale_img)
 	//cv::Mat r = labelImage;
 
 	return r;
+}
+
+int ImageProcessing::CalculateDiameter(cv::Mat main_drop_row)
+{
+	int Dia = 0;
+	int LeftMost = 0;
+	int RightMost = 0;
+
+	for (int col = 0; col < main_drop_row.cols; col++)
+	{
+		if (main_drop_row.at<uchar>(0, col))
+		{
+			// there is a 1 in this binary image
+			if (LeftMost == 0)
+			{
+				// new leftmost pixel
+				LeftMost = col;
+			}
+
+			if (col > RightMost)
+			{
+				// keep updating rightmost
+				RightMost = col;
+			}
+
+		}
+	}
+
+	Dia = abs(RightMost - LeftMost);
+
+	return Dia;
+}
+
+float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, float img_height)
+{
+	float TotalVol = -1;
+	float LevelVol = 0;
+	float Area = 0;
+
+	// first get dx and dy
+	float dx = img_width / main_drop_img.cols;	// mm/px
+	float dy = img_height / main_drop_img.rows;	// mm/px
+
+	// itterate row by row
+	for (int row = 0; row < main_drop_img.rows; row++)
+	{
+		// Get area of each row
+		Area = PI * CalculateDiameter(main_drop_img.row(row)) * dx;
+		LevelVol = Area * dy;
+
+		if (LevelVol > 0)
+		{
+			TotalVol = 0;
+		}
+
+		TotalVol += LevelVol;
+	}
+
+	return TotalVol;
 }
 
 void ImProcTest::test_ocv(void)
