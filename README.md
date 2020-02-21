@@ -26,8 +26,5 @@ At this stage, the app is able to do the following:
 7. Calculate the length of the ligament.
 8. Calculate the volume of the main droplet (excludes satellites).
 9. Write all data to an excel spreadsheet.
-
-
-## TODO
-1. Output frames with time stamp and calculted droplet position/velocity as well as number of satellites. This is purely for the purpose of validation.
+10. Write Debug Images to a subdirectory in the specified folder.
 
