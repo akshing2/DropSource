@@ -802,7 +802,8 @@ public:
 	// Function to write to CSV file
 	void Write2CSV();
 
-	// TODO: Debug Images Function
+	// Debug Images Function
+	void DebugImages();
 
 	/*GUI HANDLING METHODS*****************************************************************************/
 	void ProgressBarUpdate(System::String^ message, int min, int max, int level, bool visible);

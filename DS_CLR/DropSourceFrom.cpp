@@ -622,6 +622,12 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 		Write2CSV();
 	}
 
+	if (this->DebugImg_cbox->Checked)
+	{
+		// Write out debug images
+		DebugImages();
+	}
+
 }
 
 void DSCLR::DropSourceFrom::Write2XLSX()
@@ -760,6 +766,76 @@ void DSCLR::DropSourceFrom::Write2CSV()
 	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), false);
 	// write to file
 	csv.writeToFile(fp);
+}
+
+void DSCLR::DropSourceFrom::DebugImages()
+{
+	// first, create folder to save to
+	System::String^ subdir = this->OutputDir_text->Text + "/DebugImages";
+	// make csv sub directory
+	System::IO::Directory::CreateDirectory(subdir);
+	// output file
+	std::string fpOut = UI_ERROR::SYS2std_string(subdir) + "/" + UI_ERROR::SYS2std_string(this->NameOfTest_Text->Text) + "_";
+	std::string fpFull;
+	std::string exten = ".png";
+	cv::Mat drawing;
+	bool success = true;
+
+	System::String^ pb_str = "Drawing Debug Images";
+	ProgressBarUpdate(pb_str, 0, this->GrayscaleImages->size(), 0, true);
+
+	for (int i = 0; i < this->GrayscaleImages->size(); i++)
+	{
+		pb_str = "Debug Image: " + i + "/" + this->GrayscaleImages->size();
+
+		// clone colour image onto drawing
+		drawing = this->ColorImages->at(i).clone();
+
+		// draw main drop volume if present
+		if ((this->Position_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
+		{
+			// main drop exists, so draw the volume
+			drawing = ImageProcessing::DrawMainDropVolume(this->GrayscaleImages->at(i), drawing);
+		}
+
+		// draw ligament length if main drop present
+		if ((this->LigLength_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
+		{
+			// main drop exists, so draw the ligament
+			drawing = ImageProcessing::DrawLigamentLength(this->GrayscaleImages->at(i), drawing);
+		}
+
+		// draw main drop position if present
+		if ((this->Position_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
+		{
+			// main drop exists, so draw the ligament
+			drawing = ImageProcessing::DrawMainDropCent(this->GrayscaleImages->at(i), drawing);;
+		}
+
+		// draw satellites
+		if (this->Satellites_cbox->Checked)
+		{
+			drawing = ImageProcessing::DrawAllSatellites(this->GrayscaleImages->at(i), drawing, this->MainDropPosition->at(i));
+		}
+
+		// Save drawing
+		fpFull = fpOut + std::to_string(i + 1) + exten;
+		if (!cv::imwrite(fpFull, drawing))
+		{
+			success = false;
+			break;
+		}
+
+		// update progress bar
+		ProgressBarUpdate(pb_str, 0, this->GrayscaleImages->size(), i, true);
+	}
+	
+
+	pb_str = "Success = " + success;
+	ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), GrayscaleImages->size(), true);
+	System::Threading::Thread::Sleep(1000);
+
+	ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), GrayscaleImages->size(), false);
 }
 
 

@@ -118,6 +118,28 @@ void ImageProcessing::DrawCentroids(cv::Mat source, std::vector<cv::Point2f> Cen
 	}
 }
 
+cv::Mat ImageProcessing::DrawSelectedCentroids(cv::Mat ColorImg, std::vector<cv::Point2f> Centers, cv::Scalar clr, int radius)
+{
+	cv::Mat drawing = ColorImg.clone();
+
+	for (int i = 0; i < Centers.size(); i++)
+	{
+		cv::circle(drawing, Centers[i], radius, clr, -1);
+	}
+
+	return drawing;
+}
+
+cv::Mat ImageProcessing::DrawLine2Points(cv::Mat ColorImg, std::vector<cv::Point2f> Points, cv::Scalar clr, int thickness)
+{
+	cv::Mat drawing = ColorImg.clone();
+
+	cv::line(drawing, Points[0], Points[1], clr, thickness);
+	
+	return drawing;
+}
+
+
 cv::Point2f ImageProcessing::MaxImageCentroid(std::vector<cv::Point2f> centroids)
 {
 	cv::Point2f MaxCentroid(0, 0);
@@ -333,6 +355,40 @@ float ImageProcessing::Distance2Points(cv::Point2f p1, cv::Point2f p2)
 	return dist;
 }
 
+std::vector<cv::Point2f> ImageProcessing::LigPoints(cv::Mat grayscale_img)
+{
+	std::vector<cv::Point2f>LigamentPoints;
+
+	// 1. find main drop position
+	cv::Point2f pos = FindMainDropPos(grayscale_img);
+
+	// 2. find extreme bottom
+	cv::Point2f ExtBot = FindBottomMostPoint(grayscale_img);
+
+	// 3. find radius of head
+	float HeadRadius = Distance2Points(pos, ExtBot);
+
+	// 4. find bounding rectangle
+	cv::Rect2f Rect = FindMainDropRect(grayscale_img);
+
+	// 5. find edge of head and ligament, p1
+	cv::Point2f p1 = pos;
+	p1.y = p1.y - HeadRadius;
+
+	// 6. find tail end of ligament, p2
+	cv::Point2f p2 = pos;
+	p2.y = p2.y + HeadRadius - Rect.height;
+
+	if (Rect.height > HEIGHT_WIDTH_CMP* Rect.width)
+	{
+		// if height much greater than width, save points
+		LigamentPoints.push_back(p1);
+		LigamentPoints.push_back(p2);
+	}
+
+	return LigamentPoints;
+}
+
 float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img)
 {
 	float LigLength = -1;
@@ -530,6 +586,92 @@ float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, fl
 
 	return TotalVol;
 }
+
+cv::Mat ImageProcessing::DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg)
+{
+	cv::Mat drawing;
+	// Centroid drawin in red colour
+	cv::Scalar red = Scalar(0, 0, 255);
+	// draw in radius of 2
+	int radius = 2;
+
+	cv::Point2f MainDropPos = FindMainDropPos(GrayscaleImg);
+	std::vector<cv::Point2f>Centers2Draw;
+	Centers2Draw.push_back(MainDropPos);
+
+	// now draw main drop positions
+	drawing = DrawSelectedCentroids(ColorImg, Centers2Draw, red, radius);
+
+	return drawing;
+}
+
+cv::Mat ImageProcessing::DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, float MainDropPos_mm)
+{
+	cv::Mat drawing;
+	// Satellites drawn in yellow
+	cv::Scalar yellow = cv::Scalar(0, 255, 255);
+	// circle radius for drawing
+	int radius = 2;
+
+	cv::Mat bin = BinaryThresh(GrayscaleImg);
+	std::vector<cv::Point2f> Centers = ImageCentroids(bin);
+	
+	if (MainDropPos_mm >= 0)
+	{
+		// main drop detected so remove the centroid with max position
+		for (int i = 0; i < Centers.size(); i++)
+		{
+			if (Centers[i] == MaxImageCentroid(Centers))
+			{
+				Centers.erase(Centers.begin() + i);
+				break;
+			}
+		}
+	}
+
+	// Now draw
+	drawing = DrawSelectedCentroids(ColorImg, Centers, yellow, radius);
+
+	return drawing;
+}
+
+cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg)
+{
+	std::vector<cv::Point2f>LigPts = LigPoints(GrayscaleImg);
+	cv::Scalar white = cv::Scalar(255, 255, 255);
+	int thickness = 4;
+	cv::Mat drawing;
+	if (LigPts.size() > 0)
+	{
+		drawing = DrawLine2Points(ColorImg, LigPts, white, thickness);
+	}
+	else {
+		drawing = ColorImg.clone();
+	}
+
+	return drawing;
+}
+
+cv::Mat ImageProcessing::DrawMainDropVolume(cv::Mat GrayscaleImg, cv::Mat ColorImg)
+{
+	cv::Mat drawing = ColorImg.clone();
+	cv::Mat MDMask = MainDropMask(GrayscaleImg);
+	std::vector<std::vector<cv::Point>> Contours;
+	std::vector<cv::Vec4i> Heirarchy;
+	cv::Scalar green = cv::Scalar(0, 255, 0);
+
+	// find contours to fill
+	cv::findContours(MDMask, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+
+	for (int i = 0; i < Contours.size(); i++)
+	{
+		cv::drawContours(drawing, Contours, i, green, cv::FILLED);
+	}
+
+	return drawing;
+}
+
+
 
 void ImProcTest::test_ocv(void)
 {

@@ -84,9 +84,12 @@ namespace ImageProcessing
 	cv::Point2f FindBottomMostPoint(cv::Mat grayscale_img);
 	// radius of main drop head
 	float Distance2Points(cv::Point2f p1, cv::Point2f p2);
+	// Determine the two points (start and end) of a ligament
+	// LigPoints[0] -> Start, LigPoints[1] -> End
+	std::vector<cv::Point2f> LigPoints(cv::Mat grayscale_img);
 	// Calculate length of ligament in picture
 	float LengthOfLigament(cv::Mat grayscale_img);
-
+	
 	// DROPLET VOLUME #########################################################################################
 	// Find the maximum area of a contour
 	double FindMaxContourArea(cv::Mat grayscale_img);
@@ -99,6 +102,23 @@ namespace ImageProcessing
 	int CalculateDiameter(cv::Mat main_drop_row);
 	// Calculate the droplet volume
 	float MainDropVolume(cv::Mat main_drop_img, float img_width, float img_height);
+
+	// DEBUG IMAGES ##############################################################################################
+	// NOTE: functions are only called if parameter is selected
+	// Draw Main Drop centroid
+	cv::Mat DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg);
+	// Draw All Satellites
+	cv::Mat DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, float MainDropPos_mm);
+	// Draw Ligament Length
+	cv::Mat DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg);
+	// Draw Volume of Main Drop
+	cv::Mat DrawMainDropVolume(cv::Mat GrayscaleImg, cv::Mat ColorImg);
+
+	// IMAGE DRAWING ###############################################################################################
+	// To draw only selected centroids.Allows selection of drawing params
+	cv::Mat DrawSelectedCentroids(cv::Mat ColorImg, std::vector<cv::Point2f> Centers, cv::Scalar clr, int radius);
+	// To draw a line between two selected points
+	cv::Mat DrawLine2Points(cv::Mat ColorImg, std::vector<cv::Point2f> Points, cv::Scalar clr, int thickness);
 };
 
 // Numerical Methods
