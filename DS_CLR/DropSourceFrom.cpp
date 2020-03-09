@@ -329,9 +329,11 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 	ProgressBarUpdate(pb_str, 0, 100, 0, true);
 
 	// Loop through grayscale images
-	for (int i = 0; i < GrayscaleImages->size(); i++)
+	int i = 0;
+	for (std::vector<cv::Mat>::iterator it = this->GrayscaleImages->begin(); it != this->GrayscaleImages->end(); ++it)
 	{
-		bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
+		//bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
+		bin_img = ImageProcessing::BinaryThresh(*it);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
 		pb_str = "Main Drop Pos: " + i + "/" + GrayscaleImages->size();
 		// determine if main drop is on screen
@@ -388,8 +390,9 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		this->MainDropPosition->push_back(center_mm_y);
 
 		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
+		i++;
 	}
-
+	
 	pb_str = "Finished";
 	ProgressBarUpdate(pb_str, 0, ColorImages->size(), ColorImages->size(), true);
 	System::Threading::Thread::Sleep(1000);
@@ -460,9 +463,8 @@ void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 		Centers = ImageProcessing::ImageCentroids(bin_img);
 		pb_str = "No. Of Satellites: " + i + "/" + GrayscaleImages->size();
 		// determine if main drop is on screen
-		if (Centers.size() > 0 && !endMainDrop)
+		if (this->MainDropPosition->at(i) >= 0)
 		{
-			// just started main drop or continuing main drop
 			isMainDrop = true;
 		}
 		else
@@ -480,13 +482,13 @@ void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 			// main drop detected
 			// remove one center, which is main drop
 			satellites = int(Centers.size() - 1);
-			cv::Point2f pred = this->MainDropPredic->at(i);
-			if (pred.y > this->ImageHeight_Px)
-			{
-				// main drop has gone off screen
-				isMainDrop = false;
-				endMainDrop = true;
-			}
+			//cv::Point2f pred = this->MainDropPredic->at(i);
+			//if (pred.y > this->ImageHeight_Px)
+			//{
+			//	// main drop has gone off screen
+			//	isMainDrop = false;
+			//	endMainDrop = true;
+			//}
 		}
 
 		// Save number of satellites

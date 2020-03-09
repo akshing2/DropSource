@@ -11,11 +11,6 @@
 *	DATE:		17/12/2019
 *	VERSION:	0.1.0
 *
-*	Future Goals:
-*		1. Develop algorithm to determine position and velocity of main droplet.
-*		2. Develop algorithm to determine number of satellites.
-*		3. Develop algorithm to determine length of ligament.
-*		4. Develop algorithm to determine volume of main droplet.
 */
 
 #pragma once
