@@ -18,13 +18,13 @@ This project incorporates OpenCV 4.1.2 libraries to conduct image processing and
 At this stage, the app is able to do the following:
 
 1. Run a windows form, asking for user inputs such as:
-	a. Test parameters information (Name of test, ROI dimensions, frame rate etc).
-	b. File I/O parameters (where are input frames located, where do you want the outputs saved).
-	c. Processing parameters (what image segmentation methods do you want to employ, what drop parameters to analyse).
+	1. Test parameters information (Name of test, ROI dimensions, frame rate etc).
+	2. File I/O parameters (where are input frames located, where do you want the outputs saved).
+	3. Processing parameters (what image segmentation methods do you want to employ, what drop parameters to analyse).
 2. Run computer vision analysis on selected parameters.
 3. Provide the following output files:
-	a. Excel Spreadsheet, which tracks the parameters selected for each frame in the input directory.
-	b. Debug Images, a folder that contains debug images for visual inspection of the workings of the algorithms. 
+	1. Excel Spreadsheet, which tracks the parameters selected for each frame in the input directory.
+	2. Debug Images, a folder that contains debug images for visual inspection of the workings of the algorithms. 
 
 ## Need for Validation
 The algorithms used need to be validated through scientific means.
