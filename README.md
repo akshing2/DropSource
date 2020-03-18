@@ -17,14 +17,15 @@ This project incorporates OpenCV 4.1.2 libraries to conduct image processing and
 ## Current Functionality
 At this stage, the app is able to do the following:
 
-1. Run the GUI, with input error checking.
-2. Itterate through selected input directory.
-3. Create a time vector based off FPS (Hz) input.
-4. Determine main droplet position and errors associated with image processing.
-5. Calculate main droplet velocities based off 4.
-6. Determine number of satellites in each frame. Note: need to see if image quality is sufficient.
-7. Calculate the length of the ligament.
-8. Calculate the volume of the main droplet (excludes satellites).
-9. Write all data to an excel spreadsheet.
-10. Write Debug Images to a subdirectory in the specified folder.
+1. Run a windows form, asking for user inputs such as:
+	a. Test parameters information (Name of test, ROI dimensions, frame rate etc).
+	b. File I/O parameters (where are input frames located, where do you want the outputs saved).
+	c. Processing parameters (what image segmentation methods do you want to employ, what drop parameters to analyse).
+2. Run computer vision analysis on selected parameters.
+3. Provide the following output files:
+	a. Excel Spreadsheet, which tracks the parameters selected for each frame in the input directory.
+	b. Debug Images, a folder that contains debug images for visual inspection of the workings of the algorithms. 
+
+## Need for Validation
+The algorithms used need to be validated through scientific means.
 
