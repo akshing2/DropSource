@@ -49,7 +49,7 @@ std::vector<cv::Mat> ImageProcessing::get_images(std::string input_dir, int IMRE
 	return images;
 }
 
-cv::Mat ImageProcessing::BinaryThresh(cv::Mat image)
+cv::Mat ImageProcessing::BinaryThresh(cv::Mat image, int thresh_type)
 {
 	// initialise pre-processed image to return
 	cv::Mat pre_proc;
@@ -62,7 +62,15 @@ cv::Mat ImageProcessing::BinaryThresh(cv::Mat image)
 	// Conduct an adaptive threshold on the droplet.
 	// Parameters may need to be changed.
 	// https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html?highlight=adaptivethreshold
-	cv::adaptiveThreshold(pre_proc, pre_proc, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 9, 2);
+	if (thresh_type == THRESH_ADAPTIVE)
+	{
+		cv::adaptiveThreshold(pre_proc, pre_proc, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 9, 2);
+	}
+	else if (thresh_type == THRESH_GLOBAL)
+	{
+		cv::threshold(pre_proc, pre_proc, 127, 255, cv::THRESH_BINARY_INV);
+	}
+	
 
 	return pre_proc;
 }
@@ -156,11 +164,11 @@ cv::Point2f ImageProcessing::MaxImageCentroid(std::vector<cv::Point2f> centroids
 	return MaxCentroid;
 }
 
-cv::Point2f ImageProcessing::FindMainDropPos(cv::Mat grayscale_img)
+cv::Point2f ImageProcessing::FindMainDropPos(cv::Mat grayscale_img, int thresh_type)
 {
 	cv:Point2f pos;
 
-	cv::Mat bin_img = BinaryThresh(grayscale_img);
+	cv::Mat bin_img = BinaryThresh(grayscale_img, thresh_type);
 
 	std::vector<cv::Point2f> centers = ImageCentroids(bin_img);
 
@@ -237,7 +245,7 @@ cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool In
 	return cont_img;
 }
 
-std::vector<cv::Rect2f> ImageProcessing::FindBoundingRects(cv::Mat grayscale_img)
+std::vector<cv::Rect2f> ImageProcessing::FindBoundingRects(cv::Mat grayscale_img, int thresh_type)
 {
 	std::vector<cv::Rect2f> BoundRects;
 	std::vector<std::vector<cv::Point>> Contours;
@@ -247,7 +255,7 @@ std::vector<cv::Rect2f> ImageProcessing::FindBoundingRects(cv::Mat grayscale_img
 	cv::Scalar colour2 = Scalar(0, 255, 0);
 	
 	// binary threshold
-	cv::Mat bin_img = BinaryThresh(grayscale_img);
+	cv::Mat bin_img = BinaryThresh(grayscale_img, thresh_type);
 
 	// find contours
 	// Parameters found in python script
@@ -282,12 +290,12 @@ cv::Rect2f ImageProcessing::FindMaxAreaBoundingRect(std::vector<cv::Rect2f> Boun
 	return MaxRect;
 }
 
-cv::Rect2f ImageProcessing::FindMainDropRect(cv::Mat grayscale_img)
+cv::Rect2f ImageProcessing::FindMainDropRect(cv::Mat grayscale_img, int thresh_type)
 {
 	cv::Rect2f MainDropRect;
 	std::vector<cv::Rect2f> Rects;
 
-	Rects = FindBoundingRects(grayscale_img);
+	Rects = FindBoundingRects(grayscale_img, thresh_type);
 	MainDropRect = FindMaxAreaBoundingRect(Rects);
 
 	return MainDropRect;
@@ -312,7 +320,7 @@ cv::Mat ImageProcessing::DrawBoundingRects(cv::Mat color_img, std::vector<cv::Re
 	return drawing;
 }
 
-cv::Point2f ImageProcessing::FindBottomMostPoint(cv::Mat grayscale_img)
+cv::Point2f ImageProcessing::FindBottomMostPoint(cv::Mat grayscale_img, int thresh_type)
 {
 	cv::Point2f bottom;
 	std::vector<std::vector<cv::Point>> Contours;
@@ -321,7 +329,7 @@ cv::Point2f ImageProcessing::FindBottomMostPoint(cv::Mat grayscale_img)
 	cv::Point extBot(-1,-1);
 
 	// binarise image
-	cv::Mat bin_img = BinaryThresh(grayscale_img);
+	cv::Mat bin_img = BinaryThresh(grayscale_img, thresh_type);
 
 	// find contours
 	cv::findContours(bin_img, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
@@ -355,21 +363,21 @@ float ImageProcessing::Distance2Points(cv::Point2f p1, cv::Point2f p2)
 	return dist;
 }
 
-std::vector<cv::Point2f> ImageProcessing::LigPoints(cv::Mat grayscale_img)
+std::vector<cv::Point2f> ImageProcessing::LigPoints(cv::Mat grayscale_img, int thresh_type)
 {
 	std::vector<cv::Point2f>LigamentPoints;
 
 	// 1. find main drop position
-	cv::Point2f pos = FindMainDropPos(grayscale_img);
+	cv::Point2f pos = FindMainDropPos(grayscale_img, thresh_type);
 
 	// 2. find extreme bottom
-	cv::Point2f ExtBot = FindBottomMostPoint(grayscale_img);
+	cv::Point2f ExtBot = FindBottomMostPoint(grayscale_img, thresh_type);
 
 	// 3. find radius of head
 	float HeadRadius = Distance2Points(pos, ExtBot);
 
 	// 4. find bounding rectangle
-	cv::Rect2f Rect = FindMainDropRect(grayscale_img);
+	cv::Rect2f Rect = FindMainDropRect(grayscale_img, thresh_type);
 
 	// 5. find edge of head and ligament, p1
 	cv::Point2f p1 = pos;
@@ -389,21 +397,21 @@ std::vector<cv::Point2f> ImageProcessing::LigPoints(cv::Mat grayscale_img)
 	return LigamentPoints;
 }
 
-float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img)
+float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img, int thresh_type)
 {
 	float LigLength = -1;
 
 	// 1. find main drop position
-	cv::Point2f pos = FindMainDropPos(grayscale_img);
+	cv::Point2f pos = FindMainDropPos(grayscale_img, thresh_type);
 
 	// 2. find extreme bottom
-	cv::Point2f ExtBot = FindBottomMostPoint(grayscale_img);
+	cv::Point2f ExtBot = FindBottomMostPoint(grayscale_img, thresh_type);
 
 	// 3. find radius of head
 	float HeadRadius = Distance2Points(pos, ExtBot);
 
 	// 4. find bounding rectangle
-	cv::Rect2f Rect = FindMainDropRect(grayscale_img);
+	cv::Rect2f Rect = FindMainDropRect(grayscale_img, thresh_type);
 
 	// 5. find edge of head and ligament, p1
 	cv::Point2f p1 = pos;
@@ -422,14 +430,14 @@ float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img)
 	return LigLength;
 }
 
-double ImageProcessing::FindMaxContourArea(cv::Mat grayscale_img)
+double ImageProcessing::FindMaxContourArea(cv::Mat grayscale_img, int thresh_type)
 {
 	std::vector<std::vector<cv::Point>> Contours;
 	std::vector<cv::Vec4i> Heirarchy;
 	double MaxContourArea = 0;
 
 	// image processing
-	cv::Mat bin_img = BinaryThresh(grayscale_img);
+	cv::Mat bin_img = BinaryThresh(grayscale_img, thresh_type);
 
 	// find contours
 	// Parameters found in python script
@@ -492,13 +500,13 @@ int ImageProcessing::FindHighestLabel(cv::Mat Centroids, int NumLabels)
 }
 
 
-cv::Mat ImageProcessing::MainDropMask(cv::Mat grayscale_img)
+cv::Mat ImageProcessing::MainDropMask(cv::Mat grayscale_img, int thresh_type)
 {
 	// for connected components
 	cv::Mat stats, centroids, labelImage;
 
 	// binarize image
-	cv::Mat bin_img = BinaryThresh(grayscale_img);
+	cv::Mat bin_img = BinaryThresh(grayscale_img, thresh_type);
 
 	// connected components
 	int nLabels = cv::connectedComponentsWithStats(bin_img, labelImage, stats, centroids, 4);
@@ -587,7 +595,7 @@ float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, fl
 	return TotalVol;
 }
 
-cv::Mat ImageProcessing::DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg)
+cv::Mat ImageProcessing::DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type)
 {
 	cv::Mat drawing;
 	// Centroid drawin in red colour
@@ -595,7 +603,7 @@ cv::Mat ImageProcessing::DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg
 	// draw in radius of 2
 	int radius = 2;
 
-	cv::Point2f MainDropPos = FindMainDropPos(GrayscaleImg);
+	cv::Point2f MainDropPos = FindMainDropPos(GrayscaleImg, thresh_type);
 	std::vector<cv::Point2f>Centers2Draw;
 	Centers2Draw.push_back(MainDropPos);
 
@@ -605,7 +613,7 @@ cv::Mat ImageProcessing::DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg
 	return drawing;
 }
 
-cv::Mat ImageProcessing::DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, float MainDropPos_mm)
+cv::Mat ImageProcessing::DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, float MainDropPos_mm)
 {
 	cv::Mat drawing;
 	// Satellites drawn in yellow
@@ -613,7 +621,7 @@ cv::Mat ImageProcessing::DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorIm
 	// circle radius for drawing
 	int radius = 2;
 
-	cv::Mat bin = BinaryThresh(GrayscaleImg);
+	cv::Mat bin = BinaryThresh(GrayscaleImg, thresh_type);
 	std::vector<cv::Point2f> Centers = ImageCentroids(bin);
 	
 	if (MainDropPos_mm >= 0)
@@ -635,9 +643,9 @@ cv::Mat ImageProcessing::DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorIm
 	return drawing;
 }
 
-cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg)
+cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type)
 {
-	std::vector<cv::Point2f>LigPts = LigPoints(GrayscaleImg);
+	std::vector<cv::Point2f>LigPts = LigPoints(GrayscaleImg, thresh_type);
 	cv::Scalar white = cv::Scalar(255, 255, 255);
 	int thickness = 4;
 	cv::Mat drawing;
@@ -652,10 +660,10 @@ cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorI
 	return drawing;
 }
 
-cv::Mat ImageProcessing::DrawMainDropVolume(cv::Mat GrayscaleImg, cv::Mat ColorImg)
+cv::Mat ImageProcessing::DrawMainDropVolume(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type)
 {
 	cv::Mat drawing = ColorImg.clone();
-	cv::Mat MDMask = MainDropMask(GrayscaleImg);
+	cv::Mat MDMask = MainDropMask(GrayscaleImg, thresh_type);
 	std::vector<std::vector<cv::Point>> Contours;
 	std::vector<cv::Vec4i> Heirarchy;
 	cv::Scalar green = cv::Scalar(0, 255, 0);
@@ -681,7 +689,7 @@ void ImProcTest::test_ocv(void)
 	cv::waitKey();
 }
 
-bool ImProcTest::test_preprocessing(std::string input_dir, std::string output_dir)
+bool ImProcTest::test_preprocessing(std::string input_dir, std::string output_dir, int thresh_type)
 {
 	bool success = true;
 	// filename temp for output
@@ -696,7 +704,7 @@ bool ImProcTest::test_preprocessing(std::string input_dir, std::string output_di
 	for (std::vector<cv::Mat>::iterator it = grayscale_images.begin(); it != grayscale_images.end(); ++it)
 	{
 		// binarise image
-		preproc_img = ImageProcessing::BinaryThresh(*it);
+		preproc_img = ImageProcessing::BinaryThresh(*it, thresh_type);
 		// filename
 		fpFull = fpOut + std::to_string(counter) + exten;
 		// write to output directory
@@ -713,7 +721,7 @@ bool ImProcTest::test_preprocessing(std::string input_dir, std::string output_di
 	return success;
 }
 
-void ImProcTest::test_DrawContours(std::string input_dir, std::string output_dir)
+void ImProcTest::test_DrawContours(std::string input_dir, std::string output_dir, int thresh_type)
 {
 	std::vector<std::string> fpList = file_system::ListOfFiles(input_dir);
 	bool IncludeStaellites = false;
@@ -737,7 +745,7 @@ void ImProcTest::test_DrawContours(std::string input_dir, std::string output_dir
 		// show processed image in imshow
 		for (int j = 0; j < colour_images.size(); j++)
 		{
-			binary_image = ImageProcessing::BinaryThresh(grayscale_images[i]);
+			binary_image = ImageProcessing::BinaryThresh(grayscale_images[i], thresh_type);
 			contour_img = ImageProcessing::DrawContours(binary_image, colour_images[i], IncludeStaellites, NoiseReduction);
 
 			fpFull = fpOut + std::to_string(j+1) + exten;

@@ -148,6 +148,7 @@
     <ClInclude Include="pid.h" />
     <ClInclude Include="PID_Params.h" />
     <ClInclude Include="Test_Macro.h" />
+    <ClInclude Include="ThresholdingMethodsDefs.h" />
     <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>

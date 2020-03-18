@@ -47,6 +47,9 @@
     <ClInclude Include="CSVWriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ThresholdingMethodsDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="DropSource.ico">

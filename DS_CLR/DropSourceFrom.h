@@ -29,6 +29,8 @@
 #include "PID_Params.h"
 #include "CSVWriter.h"
 #include "libxl.h"
+#include "ThresholdingMethodsDefs.h"
+
 
 using namespace UI_ERROR;
 
@@ -55,6 +57,9 @@ namespace DSCLR {
 			//
 			ImageWidth_Px = 0;
 			ImageHeight_Px = 0;
+
+			// thresh type
+			ThreshType = -1;
 
 			// Initialise images
 			// Images
@@ -131,11 +136,14 @@ namespace DSCLR {
 
 	private: System::Windows::Forms::ProgressBar^ ProgressBar;
 
-	// Additional private members
-	// Used for Data Handling
+		   // Additional private members
+		   // Used for Data Handling
 	private:
 		float ImageWidth_Px;
 		float ImageHeight_Px;
+
+		// Thresholding type
+		int ThreshType;
 
 		// Images
 		std::vector<cv::Mat>* GrayscaleImages;
@@ -160,24 +168,37 @@ namespace DSCLR {
 		std::vector<float>* LigamentLength;
 		std::vector<float>* Volume;
 
-private: System::Windows::Forms::Label^ Parameters_lbl;
-private: System::Windows::Forms::CheckBox^ Position_cbox;
-private: System::Windows::Forms::CheckBox^ Velocity_cbox;
-private: System::Windows::Forms::CheckBox^ Satellites_cbox;
-private: System::Windows::Forms::CheckBox^ LigLength_cbox;
-private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
-private: System::Windows::Forms::Label^ OutputFiles_label;
-private: System::Windows::Forms::CheckBox^ CSV_cbox;
-private: System::Windows::Forms::CheckBox^ DebugImg_cbox;
-private: System::Windows::Forms::Label^ Error_OutputFile;
-private: System::Windows::Forms::Label^ Error_SelectParam;
-private: System::Windows::Forms::CheckBox^ XLSX_cbox;
+	private: System::Windows::Forms::Label^ Parameters_lbl;
+	private: System::Windows::Forms::CheckBox^ Position_cbox;
+	private: System::Windows::Forms::CheckBox^ Velocity_cbox;
+	private: System::Windows::Forms::CheckBox^ Satellites_cbox;
+	private: System::Windows::Forms::CheckBox^ LigLength_cbox;
+	private: System::Windows::Forms::CheckBox^ DropVolume_cbox;
+	private: System::Windows::Forms::Label^ OutputFiles_label;
+	private: System::Windows::Forms::CheckBox^ CSV_cbox;
+	private: System::Windows::Forms::CheckBox^ DebugImg_cbox;
+	private: System::Windows::Forms::Label^ Error_OutputFile;
+	private: System::Windows::Forms::Label^ Error_SelectParam;
+	private: System::Windows::Forms::CheckBox^ XLSX_cbox;
+	private: System::Windows::Forms::Label^ TestInfo_lbl;
+	private: System::Windows::Forms::Label^ FileIO_lbl;
+	private: System::Windows::Forms::Label^ DropAnalysis_lbl;
+	private: System::Windows::Forms::Label^ ImageProcessing_lbl;
+
+	private: System::Windows::Forms::GroupBox^ ThreshGroupBox;
+	private: System::Windows::Forms::RadioButton^ AdaptiveThresh_RdBtn;
+	private: System::Windows::Forms::RadioButton^ GlobalThresh_RdBtn;
+
+
+
+
+
 
 
 
 
 		   // TODO: Ligament length and Volume
-		
+
 
 	protected:
 
@@ -185,7 +206,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		System::ComponentModel::Container ^components;
+		System::ComponentModel::Container^ components;
 
 #pragma region Windows Form Designer generated code
 		/// <summary>
@@ -233,27 +254,35 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Error_OutputFile = (gcnew System::Windows::Forms::Label());
 			this->Error_SelectParam = (gcnew System::Windows::Forms::Label());
 			this->XLSX_cbox = (gcnew System::Windows::Forms::CheckBox());
+			this->TestInfo_lbl = (gcnew System::Windows::Forms::Label());
+			this->FileIO_lbl = (gcnew System::Windows::Forms::Label());
+			this->DropAnalysis_lbl = (gcnew System::Windows::Forms::Label());
+			this->ImageProcessing_lbl = (gcnew System::Windows::Forms::Label());
+			this->ThreshGroupBox = (gcnew System::Windows::Forms::GroupBox());
+			this->AdaptiveThresh_RdBtn = (gcnew System::Windows::Forms::RadioButton());
+			this->GlobalThresh_RdBtn = (gcnew System::Windows::Forms::RadioButton());
+			this->ThreshGroupBox->SuspendLayout();
 			this->SuspendLayout();
 			// 
 			// NameOfTest_label
 			// 
 			this->NameOfTest_label->AutoSize = true;
-			this->NameOfTest_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+			this->NameOfTest_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->NameOfTest_label->Location = System::Drawing::Point(19, 31);
+			this->NameOfTest_label->Location = System::Drawing::Point(19, 56);
 			this->NameOfTest_label->Name = L"NameOfTest_label";
-			this->NameOfTest_label->Size = System::Drawing::Size(156, 29);
+			this->NameOfTest_label->Size = System::Drawing::Size(148, 27);
 			this->NameOfTest_label->TabIndex = 0;
 			this->NameOfTest_label->Text = L"Name of test";
 			// 
 			// ROI_label
 			// 
 			this->ROI_label->AutoSize = true;
-			this->ROI_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+			this->ROI_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->ROI_label->Location = System::Drawing::Point(19, 99);
+			this->ROI_label->Location = System::Drawing::Point(19, 93);
 			this->ROI_label->Name = L"ROI_label";
-			this->ROI_label->Size = System::Drawing::Size(120, 29);
+			this->ROI_label->Size = System::Drawing::Size(117, 27);
 			this->ROI_label->TabIndex = 1;
 			this->ROI_label->Text = L"ROI (mm)";
 			this->ROI_label->Click += gcnew System::EventHandler(this, &DropSourceFrom::ROIDimensions_Click);
@@ -261,22 +290,22 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// FPS_label
 			// 
 			this->FPS_label->AutoSize = true;
-			this->FPS_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+			this->FPS_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->FPS_label->Location = System::Drawing::Point(19, 197);
+			this->FPS_label->Location = System::Drawing::Point(19, 146);
 			this->FPS_label->Name = L"FPS_label";
-			this->FPS_label->Size = System::Drawing::Size(112, 29);
+			this->FPS_label->Size = System::Drawing::Size(190, 27);
 			this->FPS_label->TabIndex = 2;
-			this->FPS_label->Text = L"FPS (Hz)";
+			this->FPS_label->Text = L"Frame Rate (Hz)";
 			// 
 			// Width
 			// 
 			this->Width->AutoSize = true;
-			this->Width->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			this->Width->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Width->Location = System::Drawing::Point(233, 101);
+			this->Width->Location = System::Drawing::Point(247, 95);
 			this->Width->Name = L"Width";
-			this->Width->Size = System::Drawing::Size(82, 27);
+			this->Width->Size = System::Drawing::Size(68, 29);
 			this->Width->TabIndex = 3;
 			this->Width->Text = L"Width:";
 			this->Width->Click += gcnew System::EventHandler(this, &DropSourceFrom::label1_Click);
@@ -284,11 +313,11 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// Height
 			// 
 			this->Height->AutoSize = true;
-			this->Height->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+			this->Height->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Height->Location = System::Drawing::Point(470, 101);
+			this->Height->Location = System::Drawing::Point(485, 95);
 			this->Height->Name = L"Height";
-			this->Height->Size = System::Drawing::Size(89, 27);
+			this->Height->Size = System::Drawing::Size(74, 29);
 			this->Height->TabIndex = 4;
 			this->Height->Text = L"Height:";
 			this->Height->Click += gcnew System::EventHandler(this, &DropSourceFrom::label1_Click_1);
@@ -296,22 +325,22 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// InputDir_label
 			// 
 			this->InputDir_label->AutoSize = true;
-			this->InputDir_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+			this->InputDir_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->InputDir_label->Location = System::Drawing::Point(19, 290);
+			this->InputDir_label->Location = System::Drawing::Point(19, 237);
 			this->InputDir_label->Name = L"InputDir_label";
-			this->InputDir_label->Size = System::Drawing::Size(184, 29);
+			this->InputDir_label->Size = System::Drawing::Size(169, 27);
 			this->InputDir_label->TabIndex = 5;
 			this->InputDir_label->Text = L"Input Directory";
 			// 
 			// OutputDir_label
 			// 
 			this->OutputDir_label->AutoSize = true;
-			this->OutputDir_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+			this->OutputDir_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->OutputDir_label->Location = System::Drawing::Point(19, 428);
+			this->OutputDir_label->Location = System::Drawing::Point(19, 315);
 			this->OutputDir_label->Name = L"OutputDir_label";
-			this->OutputDir_label->Size = System::Drawing::Size(203, 29);
+			this->OutputDir_label->Size = System::Drawing::Size(189, 27);
 			this->OutputDir_label->TabIndex = 7;
 			this->OutputDir_label->Text = L"Output Directory";
 			this->OutputDir_label->Click += gcnew System::EventHandler(this, &DropSourceFrom::label2_Click_1);
@@ -320,7 +349,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// 
 			this->NameOfTest_Text->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 20.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->NameOfTest_Text->Location = System::Drawing::Point(238, 31);
+			this->NameOfTest_Text->Location = System::Drawing::Point(238, 49);
 			this->NameOfTest_Text->Name = L"NameOfTest_Text";
 			this->NameOfTest_Text->Size = System::Drawing::Size(441, 38);
 			this->NameOfTest_Text->TabIndex = 8;
@@ -330,7 +359,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// 
 			this->Width_text->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 20.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Width_text->Location = System::Drawing::Point(321, 99);
+			this->Width_text->Location = System::Drawing::Point(321, 93);
 			this->Width_text->Name = L"Width_text";
 			this->Width_text->Size = System::Drawing::Size(114, 38);
 			this->Width_text->TabIndex = 9;
@@ -339,7 +368,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// 
 			this->Height_txt->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 20.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Height_txt->Location = System::Drawing::Point(565, 101);
+			this->Height_txt->Location = System::Drawing::Point(565, 95);
 			this->Height_txt->Name = L"Height_txt";
 			this->Height_txt->Size = System::Drawing::Size(114, 38);
 			this->Height_txt->TabIndex = 10;
@@ -348,7 +377,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// 
 			this->FPS_text->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 20.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->FPS_text->Location = System::Drawing::Point(238, 197);
+			this->FPS_text->Location = System::Drawing::Point(238, 146);
 			this->FPS_text->Name = L"FPS_text";
 			this->FPS_text->Size = System::Drawing::Size(197, 38);
 			this->FPS_text->TabIndex = 11;
@@ -358,7 +387,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->InputDir_text->Enabled = false;
 			this->InputDir_text->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 20.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->InputDir_text->Location = System::Drawing::Point(238, 290);
+			this->InputDir_text->Location = System::Drawing::Point(238, 237);
 			this->InputDir_text->Name = L"InputDir_text";
 			this->InputDir_text->Size = System::Drawing::Size(441, 38);
 			this->InputDir_text->TabIndex = 12;
@@ -368,7 +397,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->OutputDir_text->Enabled = false;
 			this->OutputDir_text->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 20.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->OutputDir_text->Location = System::Drawing::Point(238, 428);
+			this->OutputDir_text->Location = System::Drawing::Point(238, 315);
 			this->OutputDir_text->Name = L"OutputDir_text";
 			this->OutputDir_text->Size = System::Drawing::Size(441, 38);
 			this->OutputDir_text->TabIndex = 13;
@@ -377,7 +406,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// 
 			this->InputDir_button->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->InputDir_button->Location = System::Drawing::Point(24, 322);
+			this->InputDir_button->Location = System::Drawing::Point(24, 269);
 			this->InputDir_button->Name = L"InputDir_button";
 			this->InputDir_button->Size = System::Drawing::Size(179, 39);
 			this->InputDir_button->TabIndex = 14;
@@ -389,7 +418,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// 
 			this->OutputDir_button->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->OutputDir_button->Location = System::Drawing::Point(24, 460);
+			this->OutputDir_button->Location = System::Drawing::Point(24, 347);
 			this->OutputDir_button->Name = L"OutputDir_button";
 			this->OutputDir_button->Size = System::Drawing::Size(179, 39);
 			this->OutputDir_button->TabIndex = 15;
@@ -404,7 +433,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->StartAnalysis_button->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->StartAnalysis_button->ForeColor = System::Drawing::SystemColors::Control;
-			this->StartAnalysis_button->Location = System::Drawing::Point(24, 740);
+			this->StartAnalysis_button->Location = System::Drawing::Point(12, 733);
 			this->StartAnalysis_button->Name = L"StartAnalysis_button";
 			this->StartAnalysis_button->Size = System::Drawing::Size(179, 52);
 			this->StartAnalysis_button->TabIndex = 16;
@@ -427,7 +456,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Error_NoT->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->Error_NoT->ForeColor = System::Drawing::Color::Red;
-			this->Error_NoT->Location = System::Drawing::Point(685, 40);
+			this->Error_NoT->Location = System::Drawing::Point(685, 58);
 			this->Error_NoT->Name = L"Error_NoT";
 			this->Error_NoT->Size = System::Drawing::Size(205, 29);
 			this->Error_NoT->TabIndex = 18;
@@ -440,7 +469,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Error_ROI->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->Error_ROI->ForeColor = System::Drawing::Color::Red;
-			this->Error_ROI->Location = System::Drawing::Point(685, 110);
+			this->Error_ROI->Location = System::Drawing::Point(685, 104);
 			this->Error_ROI->Name = L"Error_ROI";
 			this->Error_ROI->Size = System::Drawing::Size(194, 29);
 			this->Error_ROI->TabIndex = 19;
@@ -453,7 +482,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Error_FPS->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->Error_FPS->ForeColor = System::Drawing::Color::Red;
-			this->Error_FPS->Location = System::Drawing::Point(685, 197);
+			this->Error_FPS->Location = System::Drawing::Point(685, 146);
 			this->Error_FPS->Name = L"Error_FPS";
 			this->Error_FPS->Size = System::Drawing::Size(199, 29);
 			this->Error_FPS->TabIndex = 20;
@@ -466,7 +495,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Error_Input->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->Error_Input->ForeColor = System::Drawing::Color::Red;
-			this->Error_Input->Location = System::Drawing::Point(685, 295);
+			this->Error_Input->Location = System::Drawing::Point(685, 242);
 			this->Error_Input->Name = L"Error_Input";
 			this->Error_Input->Size = System::Drawing::Size(171, 29);
 			this->Error_Input->TabIndex = 21;
@@ -479,7 +508,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Error_Output->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->Error_Output->ForeColor = System::Drawing::Color::Red;
-			this->Error_Output->Location = System::Drawing::Point(685, 433);
+			this->Error_Output->Location = System::Drawing::Point(685, 320);
 			this->Error_Output->Name = L"Error_Output";
 			this->Error_Output->Size = System::Drawing::Size(187, 29);
 			this->Error_Output->TabIndex = 22;
@@ -492,7 +521,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->PB_Label->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->PB_Label->ForeColor = System::Drawing::Color::Blue;
-			this->PB_Label->Location = System::Drawing::Point(233, 731);
+			this->PB_Label->Location = System::Drawing::Point(221, 724);
 			this->PB_Label->Name = L"PB_Label";
 			this->PB_Label->Size = System::Drawing::Size(121, 29);
 			this->PB_Label->TabIndex = 23;
@@ -503,7 +532,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// ProgressBar
 			// 
 			this->ProgressBar->ForeColor = System::Drawing::Color::Lime;
-			this->ProgressBar->Location = System::Drawing::Point(238, 763);
+			this->ProgressBar->Location = System::Drawing::Point(226, 756);
 			this->ProgressBar->Name = L"ProgressBar";
 			this->ProgressBar->Size = System::Drawing::Size(441, 29);
 			this->ProgressBar->Style = System::Windows::Forms::ProgressBarStyle::Continuous;
@@ -513,20 +542,20 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// Parameters_lbl
 			// 
 			this->Parameters_lbl->AutoSize = true;
-			this->Parameters_lbl->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+			this->Parameters_lbl->Font = (gcnew System::Drawing::Font(L"Arial", 24, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Parameters_lbl->Location = System::Drawing::Point(19, 640);
+			this->Parameters_lbl->Location = System::Drawing::Point(17, 444);
 			this->Parameters_lbl->Name = L"Parameters_lbl";
-			this->Parameters_lbl->Size = System::Drawing::Size(141, 29);
+			this->Parameters_lbl->Size = System::Drawing::Size(373, 37);
 			this->Parameters_lbl->TabIndex = 25;
-			this->Parameters_lbl->Text = L"Parameters";
+			this->Parameters_lbl->Text = L"Processing Parameters";
 			// 
 			// Position_cbox
 			// 
 			this->Position_cbox->AutoSize = true;
 			this->Position_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Position_cbox->Location = System::Drawing::Point(238, 614);
+			this->Position_cbox->Location = System::Drawing::Point(238, 629);
 			this->Position_cbox->Name = L"Position_cbox";
 			this->Position_cbox->Size = System::Drawing::Size(94, 29);
 			this->Position_cbox->TabIndex = 27;
@@ -539,7 +568,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Velocity_cbox->AutoSize = true;
 			this->Velocity_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Velocity_cbox->Location = System::Drawing::Point(420, 614);
+			this->Velocity_cbox->Location = System::Drawing::Point(355, 629);
 			this->Velocity_cbox->Name = L"Velocity_cbox";
 			this->Velocity_cbox->Size = System::Drawing::Size(93, 29);
 			this->Velocity_cbox->TabIndex = 28;
@@ -552,7 +581,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Satellites_cbox->AutoSize = true;
 			this->Satellites_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->Satellites_cbox->Location = System::Drawing::Point(572, 614);
+			this->Satellites_cbox->Location = System::Drawing::Point(475, 629);
 			this->Satellites_cbox->Name = L"Satellites_cbox";
 			this->Satellites_cbox->Size = System::Drawing::Size(107, 29);
 			this->Satellites_cbox->TabIndex = 29;
@@ -565,7 +594,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->LigLength_cbox->AutoSize = true;
 			this->LigLength_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->LigLength_cbox->Location = System::Drawing::Point(238, 664);
+			this->LigLength_cbox->Location = System::Drawing::Point(237, 679);
 			this->LigLength_cbox->Name = L"LigLength_cbox";
 			this->LigLength_cbox->Size = System::Drawing::Size(164, 29);
 			this->LigLength_cbox->TabIndex = 30;
@@ -578,7 +607,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->DropVolume_cbox->AutoSize = true;
 			this->DropVolume_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->DropVolume_cbox->Location = System::Drawing::Point(420, 664);
+			this->DropVolume_cbox->Location = System::Drawing::Point(422, 679);
 			this->DropVolume_cbox->Name = L"DropVolume_cbox";
 			this->DropVolume_cbox->Size = System::Drawing::Size(152, 29);
 			this->DropVolume_cbox->TabIndex = 31;
@@ -589,11 +618,11 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			// OutputFiles_label
 			// 
 			this->OutputFiles_label->AutoSize = true;
-			this->OutputFiles_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+			this->OutputFiles_label->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->OutputFiles_label->Location = System::Drawing::Point(19, 530);
+			this->OutputFiles_label->Location = System::Drawing::Point(25, 393);
 			this->OutputFiles_label->Name = L"OutputFiles_label";
-			this->OutputFiles_label->Size = System::Drawing::Size(154, 29);
+			this->OutputFiles_label->Size = System::Drawing::Size(145, 27);
 			this->OutputFiles_label->TabIndex = 32;
 			this->OutputFiles_label->Text = L"Output Files";
 			// 
@@ -602,7 +631,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->CSV_cbox->AutoSize = true;
 			this->CSV_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->CSV_cbox->Location = System::Drawing::Point(475, 532);
+			this->CSV_cbox->Location = System::Drawing::Point(478, 395);
 			this->CSV_cbox->Name = L"CSV_cbox";
 			this->CSV_cbox->Size = System::Drawing::Size(99, 29);
 			this->CSV_cbox->TabIndex = 33;
@@ -615,7 +644,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->DebugImg_cbox->AutoSize = true;
 			this->DebugImg_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->DebugImg_cbox->Location = System::Drawing::Point(321, 530);
+			this->DebugImg_cbox->Location = System::Drawing::Point(324, 393);
 			this->DebugImg_cbox->Name = L"DebugImg_cbox";
 			this->DebugImg_cbox->Size = System::Drawing::Size(145, 29);
 			this->DebugImg_cbox->TabIndex = 34;
@@ -628,7 +657,7 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Error_OutputFile->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->Error_OutputFile->ForeColor = System::Drawing::Color::Red;
-			this->Error_OutputFile->Location = System::Drawing::Point(685, 530);
+			this->Error_OutputFile->Location = System::Drawing::Point(688, 393);
 			this->Error_OutputFile->Name = L"Error_OutputFile";
 			this->Error_OutputFile->Size = System::Drawing::Size(166, 29);
 			this->Error_OutputFile->TabIndex = 35;
@@ -641,11 +670,11 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Error_SelectParam->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->Error_SelectParam->ForeColor = System::Drawing::Color::Red;
-			this->Error_SelectParam->Location = System::Drawing::Point(636, 662);
+			this->Error_SelectParam->Location = System::Drawing::Point(682, 631);
 			this->Error_SelectParam->Name = L"Error_SelectParam";
-			this->Error_SelectParam->Size = System::Drawing::Size(261, 29);
+			this->Error_SelectParam->Size = System::Drawing::Size(147, 29);
 			this->Error_SelectParam->TabIndex = 36;
-			this->Error_SelectParam->Text = L"Select At Least 1 Parameter ";
+			this->Error_SelectParam->Text = L"Select Atleast 1";
 			this->Error_SelectParam->Visible = false;
 			// 
 			// XLSX_cbox
@@ -653,19 +682,108 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->XLSX_cbox->AutoSize = true;
 			this->XLSX_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->XLSX_cbox->Location = System::Drawing::Point(238, 530);
+			this->XLSX_cbox->Location = System::Drawing::Point(241, 393);
 			this->XLSX_cbox->Name = L"XLSX_cbox";
 			this->XLSX_cbox->Size = System::Drawing::Size(60, 29);
 			this->XLSX_cbox->TabIndex = 37;
 			this->XLSX_cbox->Text = L"xlsx";
 			this->XLSX_cbox->UseVisualStyleBackColor = true;
 			// 
+			// TestInfo_lbl
+			// 
+			this->TestInfo_lbl->AutoSize = true;
+			this->TestInfo_lbl->Font = (gcnew System::Drawing::Font(L"Arial", 24, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->TestInfo_lbl->Location = System::Drawing::Point(12, 9);
+			this->TestInfo_lbl->Name = L"TestInfo_lbl";
+			this->TestInfo_lbl->Size = System::Drawing::Size(266, 37);
+			this->TestInfo_lbl->TabIndex = 38;
+			this->TestInfo_lbl->Text = L"Test Information";
+			this->TestInfo_lbl->UseMnemonic = false;
+			// 
+			// FileIO_lbl
+			// 
+			this->FileIO_lbl->AutoSize = true;
+			this->FileIO_lbl->Font = (gcnew System::Drawing::Font(L"Arial", 24, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->FileIO_lbl->Location = System::Drawing::Point(17, 197);
+			this->FileIO_lbl->Name = L"FileIO_lbl";
+			this->FileIO_lbl->Size = System::Drawing::Size(272, 37);
+			this->FileIO_lbl->TabIndex = 39;
+			this->FileIO_lbl->Text = L"File Input/Output";
+			this->FileIO_lbl->UseMnemonic = false;
+			// 
+			// DropAnalysis_lbl
+			// 
+			this->DropAnalysis_lbl->AutoSize = true;
+			this->DropAnalysis_lbl->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->DropAnalysis_lbl->Location = System::Drawing::Point(22, 631);
+			this->DropAnalysis_lbl->Name = L"DropAnalysis_lbl";
+			this->DropAnalysis_lbl->Size = System::Drawing::Size(185, 27);
+			this->DropAnalysis_lbl->TabIndex = 40;
+			this->DropAnalysis_lbl->Text = L"Droplet Analysis";
+			// 
+			// ImageProcessing_lbl
+			// 
+			this->ImageProcessing_lbl->AutoSize = true;
+			this->ImageProcessing_lbl->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->ImageProcessing_lbl->Location = System::Drawing::Point(14, 499);
+			this->ImageProcessing_lbl->Name = L"ImageProcessing_lbl";
+			this->ImageProcessing_lbl->Size = System::Drawing::Size(204, 27);
+			this->ImageProcessing_lbl->TabIndex = 41;
+			this->ImageProcessing_lbl->Text = L"Image Processing";
+			// 
+			// ThreshGroupBox
+			// 
+			this->ThreshGroupBox->Controls->Add(this->AdaptiveThresh_RdBtn);
+			this->ThreshGroupBox->Controls->Add(this->GlobalThresh_RdBtn);
+			this->ThreshGroupBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->ThreshGroupBox->Location = System::Drawing::Point(238, 499);
+			this->ThreshGroupBox->Name = L"ThreshGroupBox";
+			this->ThreshGroupBox->Size = System::Drawing::Size(190, 109);
+			this->ThreshGroupBox->TabIndex = 42;
+			this->ThreshGroupBox->TabStop = false;
+			this->ThreshGroupBox->Text = L"Binary Thresholding Method";
+			// 
+			// AdaptiveThresh_RdBtn
+			// 
+			this->AdaptiveThresh_RdBtn->AutoSize = true;
+			this->AdaptiveThresh_RdBtn->Location = System::Drawing::Point(6, 69);
+			this->AdaptiveThresh_RdBtn->Name = L"AdaptiveThresh_RdBtn";
+			this->AdaptiveThresh_RdBtn->Size = System::Drawing::Size(144, 20);
+			this->AdaptiveThresh_RdBtn->TabIndex = 1;
+			this->AdaptiveThresh_RdBtn->Text = L"Adaptive Threshold";
+			this->AdaptiveThresh_RdBtn->TextImageRelation = System::Windows::Forms::TextImageRelation::ImageAboveText;
+			this->AdaptiveThresh_RdBtn->UseVisualStyleBackColor = true;
+			this->AdaptiveThresh_RdBtn->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::AdaptiveThresh_RdBtn_CheckedChanged);
+			// 
+			// GlobalThresh_RdBtn
+			// 
+			this->GlobalThresh_RdBtn->AutoSize = true;
+			this->GlobalThresh_RdBtn->Checked = true;
+			this->GlobalThresh_RdBtn->Location = System::Drawing::Point(6, 33);
+			this->GlobalThresh_RdBtn->Name = L"GlobalThresh_RdBtn";
+			this->GlobalThresh_RdBtn->Size = System::Drawing::Size(130, 20);
+			this->GlobalThresh_RdBtn->TabIndex = 0;
+			this->GlobalThresh_RdBtn->TabStop = true;
+			this->GlobalThresh_RdBtn->Text = L"Global Threshold";
+			this->GlobalThresh_RdBtn->UseVisualStyleBackColor = true;
+			this->GlobalThresh_RdBtn->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::GlobalThresh_RdBtn_CheckedChanged);
+			// 
 			// DropSourceFrom
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::Control;
-			this->ClientSize = System::Drawing::Size(909, 836);
+			this->ClientSize = System::Drawing::Size(892, 797);
+			this->Controls->Add(this->ThreshGroupBox);
+			this->Controls->Add(this->ImageProcessing_lbl);
+			this->Controls->Add(this->DropAnalysis_lbl);
+			this->Controls->Add(this->FileIO_lbl);
+			this->Controls->Add(this->TestInfo_lbl);
 			this->Controls->Add(this->XLSX_cbox);
 			this->Controls->Add(this->Error_SelectParam);
 			this->Controls->Add(this->Error_OutputFile);
@@ -705,6 +823,8 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 			this->Name = L"DropSourceFrom";
 			this->Text = L"DropSource";
 			this->Load += gcnew System::EventHandler(this, &DropSourceFrom::DropSourceFrom_Load);
+			this->ThreshGroupBox->ResumeLayout(false);
+			this->ThreshGroupBox->PerformLayout();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -719,135 +839,151 @@ private: System::Windows::Forms::CheckBox^ XLSX_cbox;
 	}
 	private: System::Void label1_Click(System::Object^ sender, System::EventArgs^ e) {
 	}
-private: System::Void label1_Click_1(System::Object^ sender, System::EventArgs^ e) {
-}
-private: System::Void label2_Click_1(System::Object^ sender, System::EventArgs^ e) {
-}
-private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
-}
-private: System::Void maskedTextBox1_MaskInputRejected(System::Object^ sender, System::Windows::Forms::MaskInputRejectedEventArgs^ e) {
-}
-private: System::Void ROIDimensions_Click(System::Object^ sender, System::EventArgs^ e) {
-}
-private: System::Void button1_Click_1(System::Object^ sender, System::EventArgs^ e) {
-	System::Windows::Forms::DialogResult dia_res = System::Windows::Forms::DialogResult::OK;
-	folderBrowserDialog2->ShowNewFolderButton = true;
-	if (folderBrowserDialog2->ShowDialog() == dia_res)
-	{
-		OutputDir_text->Text = folderBrowserDialog2->SelectedPath;
+	private: System::Void label1_Click_1(System::Object^ sender, System::EventArgs^ e) {
 	}
-}
-private: System::Void openFileDialog1_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e) {
-}
-private: System::Void InputDir_button_Click(System::Object^ sender, System::EventArgs^ e) {
-	System::Windows::Forms::DialogResult dia_res = System::Windows::Forms::DialogResult::OK;
-	folderBrowserDialog1->ShowNewFolderButton = false;
-	if (folderBrowserDialog1->ShowDialog() == dia_res)
-	{
-		InputDir_text->Text = folderBrowserDialog1->SelectedPath;
+	private: System::Void label2_Click_1(System::Object^ sender, System::EventArgs^ e) {
 	}
-}
-private: System::Void folderBrowserDialog1_HelpRequest(System::Object^ sender, System::EventArgs^ e) {
-}
-private: System::Void StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e);
-
-private: System::Void PB_Label_Click(System::Object^ sender, System::EventArgs^ e) {
-
-}
-
-// Define own methods for the class here
-public:
-	/*HELPER METHODS***********************************************************************************/
-	bool User_Input_Error_Check();
-	bool Process_Video();
-	// Clear all data from previous session
-	void ClearAllData();
-	// Setter Functions
-	void setWidthAndHeight_Px(float width, float height);
-	// Getter Functions
-	float getDeltaT();
-	// Converter Functions
-	float Pixels2mm(float data, bool isWidth);
-	float mm2Pixel(float data, bool isWidth);
-	// Simulate cropping of image (for testing purposes)
-	cv::Mat SimCropBinaryImage(cv::Mat bin_image);
-	// Predicts position of main drop at next time instance
-	cv::Point2f PredictNextMainDropPosition(cv::Point2f detected_pos, int index);
-
-	/*IMAGE HANDLING METHODS***************************************************************************/
-	// returns vector of image frames in desired load type (ie colour or grayscale)
-	// TODO: Maybe save as private member?
-	std::vector<cv::Mat> LoadImages(int IMREAD_TYPE);
-	void LoadGrayscaleImages();
-	void LoadColorImages();
-
-	// function to get vector of time values of test
-	// Units: ms
-	void MakeTimeVector(int size);
-	// function to get y position of main drop
-	void MainDropPositions();
-	// function to get y velocity of main drop (TODO)
-	void MainDropVelocities();
-	// function to get number of satellites
-	void CountNumberOfSatellites();
-	// function to calculate ligament length
-	void CalculateLigLength();
-	// function to calculate main drop volume
-	void CalculateMainDropVol();
-	// function to gather all parameter data
-	void DropletAnalysis();
-
-	// Function to write to xlsx file
-	void Write2XLSX();
-	// Function to write to CSV file
-	void Write2CSV();
-
-	// Debug Images Function
-	void DebugImages();
-
-	/*GUI HANDLING METHODS*****************************************************************************/
-	void ProgressBarUpdate(System::String^ message, int min, int max, int level, bool visible);
-
-	/*DEBUG METHODS************************************************************************************/
-	void DrawDetectedAndPredictedCenters(bool enablePredic);
-	void DrawAllCentroids();
-	void DrawBoundingRects();
-	void DrawExtBotPoints();
-	void DrawMainDropMask();
-
-	/*TESTING METHODS**********************************************************************************/
-	bool TestPreProcessing();
-	bool TestDrawContours();
-	bool TestTimeVector();
-	void TestFunctions();
-	void TestDetectPredict();
-	void TestBoundingRect();
-	void TestExtBotPoints();
-	void TestMainDropMask();
-
-private: System::Void SimulateCrop_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
-}
-private: System::Void Velocity_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
-	this->Position_cbox->Checked = this->Velocity_cbox->Checked;
-}
-private: System::Void Position_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
-	if (!this->Position_cbox->Checked)
-	{
-		this->Velocity_cbox->Checked = false;
-		this->Satellites_cbox->Checked = false;
-		this->LigLength_cbox->Checked = false;
-		this->DropVolume_cbox->Checked = false;
+	private: System::Void textBox1_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 	}
-}
-private: System::Void Satellites_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
-	this->Position_cbox->Checked = this->Satellites_cbox->Checked;
-}
-private: System::Void LigLength_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
-	this->Position_cbox->Checked = this->LigLength_cbox->Checked;
-}
-private: System::Void DropVolume_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
-	this->Position_cbox->Checked = this->DropVolume_cbox->Checked;
-}
+	private: System::Void maskedTextBox1_MaskInputRejected(System::Object^ sender, System::Windows::Forms::MaskInputRejectedEventArgs^ e) {
+	}
+	private: System::Void ROIDimensions_Click(System::Object^ sender, System::EventArgs^ e) {
+	}
+	private: System::Void button1_Click_1(System::Object^ sender, System::EventArgs^ e) {
+		System::Windows::Forms::DialogResult dia_res = System::Windows::Forms::DialogResult::OK;
+		folderBrowserDialog2->ShowNewFolderButton = true;
+		if (folderBrowserDialog2->ShowDialog() == dia_res)
+		{
+			OutputDir_text->Text = folderBrowserDialog2->SelectedPath;
+		}
+	}
+	private: System::Void openFileDialog1_FileOk(System::Object^ sender, System::ComponentModel::CancelEventArgs^ e) {
+	}
+	private: System::Void InputDir_button_Click(System::Object^ sender, System::EventArgs^ e) {
+		System::Windows::Forms::DialogResult dia_res = System::Windows::Forms::DialogResult::OK;
+		folderBrowserDialog1->ShowNewFolderButton = false;
+		if (folderBrowserDialog1->ShowDialog() == dia_res)
+		{
+			InputDir_text->Text = folderBrowserDialog1->SelectedPath;
+		}
+	}
+	private: System::Void folderBrowserDialog1_HelpRequest(System::Object^ sender, System::EventArgs^ e) {
+	}
+	private: System::Void StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e);
 
+	private: System::Void PB_Label_Click(System::Object^ sender, System::EventArgs^ e) {
+
+	}
+
+		   // Define own methods for the class here
+	public:
+		/*HELPER METHODS***********************************************************************************/
+		bool User_Input_Error_Check();
+		bool Process_Video();
+		// Clear all data from previous session
+		void ClearAllData();
+		// Setter Functions
+		void setWidthAndHeight_Px(float width, float height);
+		// Getter Functions
+		float getDeltaT();
+		// Converter Functions
+		float Pixels2mm(float data, bool isWidth);
+		float mm2Pixel(float data, bool isWidth);
+		// Simulate cropping of image (for testing purposes)
+		cv::Mat SimCropBinaryImage(cv::Mat bin_image);
+		// Predicts position of main drop at next time instance
+		cv::Point2f PredictNextMainDropPosition(cv::Point2f detected_pos, int index);
+
+		/*IMAGE HANDLING METHODS***************************************************************************/
+		// returns vector of image frames in desired load type (ie colour or grayscale)
+		// TODO: Maybe save as private member?
+		std::vector<cv::Mat> LoadImages(int IMREAD_TYPE);
+		void LoadGrayscaleImages();
+		void LoadColorImages();
+
+		// function to get vector of time values of test
+		// Units: ms
+		void MakeTimeVector(int size);
+		// function to get y position of main drop
+		void MainDropPositions();
+		// function to get y velocity of main drop (TODO)
+		void MainDropVelocities();
+		// function to get number of satellites
+		void CountNumberOfSatellites();
+		// function to calculate ligament length
+		void CalculateLigLength();
+		// function to calculate main drop volume
+		void CalculateMainDropVol();
+		// function to gather all parameter data
+		void DropletAnalysis();
+
+		// Function to write to xlsx file
+		void Write2XLSX();
+		// Function to write to CSV file
+		void Write2CSV();
+
+		// Debug Images Function
+		void DebugImages();
+
+		/*GUI HANDLING METHODS*****************************************************************************/
+		void ProgressBarUpdate(System::String^ message, int min, int max, int level, bool visible);
+
+		/*DEBUG METHODS************************************************************************************/
+		void DrawDetectedAndPredictedCenters(bool enablePredic);
+		void DrawAllCentroids();
+		void DrawBoundingRects();
+		void DrawExtBotPoints();
+		void DrawMainDropMask();
+
+		/*TESTING METHODS**********************************************************************************/
+		bool TestPreProcessing();
+		bool TestDrawContours();
+		bool TestTimeVector();
+		void TestFunctions();
+		void TestDetectPredict();
+		void TestBoundingRect();
+		void TestExtBotPoints();
+		void TestMainDropMask();
+
+	private: System::Void SimulateCrop_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+	}
+	private: System::Void Velocity_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+		this->Position_cbox->Checked = this->Velocity_cbox->Checked;
+	}
+	private: System::Void Position_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+		if (!this->Position_cbox->Checked)
+		{
+			this->Velocity_cbox->Checked = false;
+			this->Satellites_cbox->Checked = false;
+			this->LigLength_cbox->Checked = false;
+			this->DropVolume_cbox->Checked = false;
+		}
+	}
+	private: System::Void Satellites_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+		this->Position_cbox->Checked = this->Satellites_cbox->Checked;
+	}
+	private: System::Void LigLength_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+		this->Position_cbox->Checked = this->LigLength_cbox->Checked;
+	}
+	private: System::Void DropVolume_cbox_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+		this->Position_cbox->Checked = this->DropVolume_cbox->Checked;
+	}
+	private: System::Void GlobalThresh_RdBtn_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+		if (this->GlobalThresh_RdBtn->Checked)
+		{
+			this->AdaptiveThresh_RdBtn->Checked = false;
+			this->ThreshType = THRESH_GLOBAL;
+			
+		}
+	}
+	private: System::Void AdaptiveThresh_RdBtn_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+		if (this->AdaptiveThresh_RdBtn->Checked)
+		{
+			this->GlobalThresh_RdBtn->Checked = false;
+			this->ThreshType = THRESH_ADAPTIVE;
+		}
+}
 };
 }
+
+

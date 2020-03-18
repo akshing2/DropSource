@@ -15,6 +15,7 @@ using namespace DSCLR;
 // Default error value
 #define DEF_ERR				-100
 
+
 // Start of Form Functions
 System::Void DSCLR::DropSourceFrom::StartAnalysis_button_Click(System::Object^ sender, System::EventArgs^ e)
 {
@@ -187,10 +188,10 @@ cv::Point2f DSCLR::DropSourceFrom::PredictNextMainDropPosition(cv::Point2f detec
 	// otherwise return the same detected position
 	if (index > 2)
 	{
-		bin_image = ImageProcessing::BinaryThresh(GrayscaleImages->at(index - 2));
+		bin_image = ImageProcessing::BinaryThresh(GrayscaleImages->at(index - 2), this->ThreshType);
 		// get previous two positions
 		cv::Point2f rt0 = ImageProcessing::MaxImageCentroid(ImageProcessing::ImageCentroids(bin_image));
-		bin_image = ImageProcessing::BinaryThresh(GrayscaleImages->at(index - 1));
+		bin_image = ImageProcessing::BinaryThresh(GrayscaleImages->at(index - 1), this->ThreshType);
 		cv::Point2f rt1 = ImageProcessing::MaxImageCentroid(ImageProcessing::ImageCentroids(bin_image));
 
 		// predict y position, assume same x
@@ -333,7 +334,7 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 	for (std::vector<cv::Mat>::iterator it = this->GrayscaleImages->begin(); it != this->GrayscaleImages->end(); ++it)
 	{
 		//bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
-		bin_img = ImageProcessing::BinaryThresh(*it);
+		bin_img = ImageProcessing::BinaryThresh(*it, this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
 		pb_str = "Main Drop Pos: " + i + "/" + GrayscaleImages->size();
 		// determine if main drop is on screen
@@ -459,7 +460,7 @@ void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 	// Loop through grayscale images
 	for (int i = 0; i < GrayscaleImages->size(); i++)
 	{
-		bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
+		bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i), this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
 		pb_str = "No. Of Satellites: " + i + "/" + GrayscaleImages->size();
 		// determine if main drop is on screen
@@ -517,7 +518,7 @@ void DSCLR::DropSourceFrom::CalculateLigLength()
 		if (this->MainDropPoints->at(i).y >= 0)
 		{
 			// main drop exists
-			LigLen = ImageProcessing::LengthOfLigament(this->GrayscaleImages->at(i));
+			LigLen = ImageProcessing::LengthOfLigament(this->GrayscaleImages->at(i), this->ThreshType);
 		}
 
 		// append to lists
@@ -553,7 +554,7 @@ void DSCLR::DropSourceFrom::CalculateMainDropVol()
 		{
 			// main drop exists
 			// mask
-			MainDropImg = ImageProcessing::MainDropMask(this->GrayscaleImages->at(i));
+			MainDropImg = ImageProcessing::MainDropMask(this->GrayscaleImages->at(i), this->ThreshType);
 			MainDropVol = ImageProcessing::MainDropVolume(MainDropImg, ROI_Width, ROI_Height);
 		}
 
@@ -636,7 +637,7 @@ void DSCLR::DropSourceFrom::Write2XLSX()
 {
 	libxl::Book* wbook = xlCreateXMLBook();
 	bool success = false;
-	int ParamCol[6] = {0, 1, 2, 3, 4, 5};
+	int ParamCol[7] = {0, 1, 2, 3, 4, 5, 6};
 	System::String^ pb_str = "Writing to XLSX";
 	if (wbook)
 	{
@@ -659,45 +660,48 @@ void DSCLR::DropSourceFrom::Write2XLSX()
 			// Make the worksheet and fill with values from test
 
 			// make title header for spreadsheet
-			sheet->writeStr(1, ParamCol[0], L"Time (ms)");
-			sheet->writeStr(1, ParamCol[1], L"Position (mm)");
-			sheet->writeStr(1, ParamCol[2], L"Velocity (mm/s)");
-			sheet->writeStr(1, ParamCol[3], L"Number of Satellites");
-			sheet->writeStr(1, ParamCol[4], L"Ligament Length (mm)");
-			sheet->writeStr(1, ParamCol[5], L"Volme of Droplet (mm^3)");
+			sheet->writeStr(1, ParamCol[0], L"Frame");
+			sheet->writeStr(1, ParamCol[1], L"Time (ms)");
+			sheet->writeStr(1, ParamCol[2], L"Position (mm)");
+			sheet->writeStr(1, ParamCol[3], L"Velocity (mm/s)");
+			sheet->writeStr(1, ParamCol[4], L"Number of Satellites");
+			sheet->writeStr(1, ParamCol[5], L"Ligament Length (mm)");
+			sheet->writeStr(1, ParamCol[6], L"Volme of Droplet (mm^3)");
 
 			// loop through data and add
 			
 			ProgressBarUpdate(pb_str, 0, 100, 0, true);
 			for (int row = 0; row < this->GrayscaleImages->size(); row++)
 			{
-				sheet->writeNum(row + 2, ParamCol[0], this->TimeVector->at(row));
+				sheet->writeNum(row + 2, ParamCol[0], row);
+
+				sheet->writeNum(row + 2, ParamCol[1], this->TimeVector->at(row));
 
 				// always add position as this is always needed
-				sheet->writeNum(row + 2, ParamCol[1], this->MainDropPosition->at(row));
+				sheet->writeNum(row + 2, ParamCol[2], this->MainDropPosition->at(row));
 
 				// add velocity if requested
 				if (this->Velocity_cbox->Checked)
 				{
-					sheet->writeNum(row + 2, ParamCol[2], this->MainDropVelocity->at(row));
+					sheet->writeNum(row + 2, ParamCol[3], this->MainDropVelocity->at(row));
 				}
 
 				// add number of satellites if requested
 				if (this->Satellites_cbox->Checked)
 				{
-					sheet->writeNum(row + 2, ParamCol[3], this->NumberOfSatellites->at(row));
+					sheet->writeNum(row + 2, ParamCol[4], this->NumberOfSatellites->at(row));
 				}
 
 				// add ligament length if requested
 				if (this->LigLength_cbox->Checked)
 				{
-					sheet->writeNum(row + 2, ParamCol[4], this->LigamentLength->at(row));
+					sheet->writeNum(row + 2, ParamCol[5], this->LigamentLength->at(row));
 				}
 
 				// add drop volume if requested
 				if (this->DropVolume_cbox->Checked)
 				{
-					sheet->writeNum(row + 2, ParamCol[5], this->Volume->at(row));
+					sheet->writeNum(row + 2, ParamCol[6], this->Volume->at(row));
 				}
 				pb_str = "CSV File: " + row + "/" + GrayscaleImages->size();
 				ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), row, true);
@@ -797,27 +801,27 @@ void DSCLR::DropSourceFrom::DebugImages()
 		if ((this->Position_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the volume
-			drawing = ImageProcessing::DrawMainDropVolume(this->GrayscaleImages->at(i), drawing);
+			drawing = ImageProcessing::DrawMainDropVolume(this->GrayscaleImages->at(i), drawing, this->ThreshType);
 		}
 
 		// draw ligament length if main drop present
 		if ((this->LigLength_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the ligament
-			drawing = ImageProcessing::DrawLigamentLength(this->GrayscaleImages->at(i), drawing);
+			drawing = ImageProcessing::DrawLigamentLength(this->GrayscaleImages->at(i), drawing, this->ThreshType);
 		}
 
 		// draw main drop position if present
 		if ((this->Position_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the ligament
-			drawing = ImageProcessing::DrawMainDropCent(this->GrayscaleImages->at(i), drawing);;
+			drawing = ImageProcessing::DrawMainDropCent(this->GrayscaleImages->at(i), drawing, this->ThreshType);;
 		}
 
 		// draw satellites
 		if (this->Satellites_cbox->Checked)
 		{
-			drawing = ImageProcessing::DrawAllSatellites(this->GrayscaleImages->at(i), drawing, this->MainDropPosition->at(i));
+			drawing = ImageProcessing::DrawAllSatellites(this->GrayscaleImages->at(i), drawing,this->ThreshType, this->MainDropPosition->at(i));
 		}
 
 		// Save drawing
@@ -928,7 +932,7 @@ void DSCLR::DropSourceFrom::DrawAllCentroids()
 	for (int i = 0; i < ColorImages->size(); i++)
 	{
 		pb_str = "Drawing All Centers: " + i + "/" + ColorImages->size();
-		bin = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
+		bin = ImageProcessing::BinaryThresh(GrayscaleImages->at(i), this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin);
 		src = ColorImages->at(i).clone();
 		ImageProcessing::DrawCentroids(src, Centers);
@@ -976,7 +980,7 @@ void DSCLR::DropSourceFrom::DrawBoundingRects()
 	for (int i = 0; i < GrayscaleImages->size(); i++)
 	{
 		pb_str = "Drawing Bounding Rect: " + i + "/" + GrayscaleImages->size();
-		BoundRects = ImageProcessing::FindBoundingRects(GrayscaleImages->at(i));
+		BoundRects = ImageProcessing::FindBoundingRects(GrayscaleImages->at(i), this->ThreshType);
 		drawing = ImageProcessing::DrawBoundingRects(ColorImages->at(i), BoundRects);
 		
 		// Now save to output directory
@@ -1024,7 +1028,7 @@ void DSCLR::DropSourceFrom::DrawExtBotPoints()
 	for (int i = 0; i < this->GrayscaleImages->size(); i++)
 	{
 		pb_str = "Drawing Bounding Rect: " + i + "/" + GrayscaleImages->size();
-		ExtBot = ImageProcessing::FindBottomMostPoint(this->GrayscaleImages->at(i));
+		ExtBot = ImageProcessing::FindBottomMostPoint(this->GrayscaleImages->at(i), this->ThreshType);
 		drawing = this->ColorImages->at(i).clone();
 
 		// legit position
@@ -1085,7 +1089,7 @@ void DSCLR::DropSourceFrom::DrawMainDropMask()
 		}
 
 		pb_str = "Drawing Main Drop Mask: " + i + "/" + GrayscaleImages->size();
-		drawing = ImageProcessing::MainDropMask(this->GrayscaleImages->at(i));
+		drawing = ImageProcessing::MainDropMask(this->GrayscaleImages->at(i), this->ThreshType);
 
 		// save to output
 		fpFull = fpOut + std::to_string(i + 1) + exten;
@@ -1142,7 +1146,7 @@ bool DSCLR::DropSourceFrom::TestPreProcessing()
 	for (int i = 0; i < grayscale_images.size(); i++)
 	{
 		// binarise image
-		preproc_img = ImageProcessing::BinaryThresh(grayscale_images[i]);
+		preproc_img = ImageProcessing::BinaryThresh(grayscale_images[i], this->ThreshType);
 		// filename
 		fpFull = fpOut + std::to_string(i) + exten;
 		// write to output directory
@@ -1216,7 +1220,7 @@ bool DSCLR::DropSourceFrom::TestDrawContours()
 
 	for (int j = 0; j < colour_images.size(); j++)
 	{
-		binary_image = ImageProcessing::BinaryThresh(grayscale_images[j]);
+		binary_image = ImageProcessing::BinaryThresh(grayscale_images[j], this->ThreshType);
 		
 		contour_img = ImageProcessing::DrawContours(binary_image, colour_images[j], IncludeStaellites, NoiseReduction);
 

@@ -16,6 +16,7 @@
 #pragma once
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
+#include "ThresholdingMethodsDefs.h"
 
 #define MIN_SATELLITE_SIZE	10
 #define MAX_SATELLITE_SIZE	15
@@ -51,7 +52,7 @@ namespace ImageProcessing
 	//		IMREAD_TYPE	->	Determines how image should be read in (eg colour or grayscale)
 	std::vector<cv::Mat> get_images(std::string input_dir, int IMREAD_TYPE);
 	// Preprocessing
-	cv::Mat BinaryThresh(cv::Mat image);
+	cv::Mat BinaryThresh(cv::Mat image, int thresh_type);
 
 	// MAIN DROP POSITIONS ####################################################################################
 	// returns a vector of mass centers for a single image
@@ -62,37 +63,37 @@ namespace ImageProcessing
 	void DrawCentroids(cv::Mat source, std::vector<cv::Point2f> Centers);
 	// returns maximum y displacement found in vector of centroids
 	cv::Point2f MaxImageCentroid(std::vector<cv::Point2f> centroids);
-	cv::Point2f FindMainDropPos(cv::Mat grayscale_img);
+	cv::Point2f FindMainDropPos(cv::Mat grayscale_img, int thresh_type);
 	// Draw Contours
 	// Returns processed image, which is a frame of the high speed video
 	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites, bool NoiseReduction);
 
 	// LIGAMENT LENGTH ########################################################################################
 	// Find Bounding Rectangle
-	std::vector<cv::Rect2f> FindBoundingRects(cv::Mat grayscale_img);
+	std::vector<cv::Rect2f> FindBoundingRects(cv::Mat grayscale_img, int thresh_type);
 	// find bounding rectangle with largest area
 	cv::Rect2f FindMaxAreaBoundingRect(std::vector<cv::Rect2f> BoundRects);
-	cv::Rect2f FindMainDropRect(cv::Mat grayscale_img);
+	cv::Rect2f FindMainDropRect(cv::Mat grayscale_img, int thresh_type);
 	// Draw Bounding Rectangle
 	cv::Mat DrawBoundingRects(cv::Mat color_img, std::vector<cv::Rect2f> bound_rects);
 	// Find bottom most point of contour
-	cv::Point2f FindBottomMostPoint(cv::Mat grayscale_img);
+	cv::Point2f FindBottomMostPoint(cv::Mat grayscale_img, int thresh_type);
 	// radius of main drop head
 	float Distance2Points(cv::Point2f p1, cv::Point2f p2);
 	// Determine the two points (start and end) of a ligament
 	// LigPoints[0] -> Start, LigPoints[1] -> End
-	std::vector<cv::Point2f> LigPoints(cv::Mat grayscale_img);
+	std::vector<cv::Point2f> LigPoints(cv::Mat grayscale_img, int thresh_type);
 	// Calculate length of ligament in picture
-	float LengthOfLigament(cv::Mat grayscale_img);
+	float LengthOfLigament(cv::Mat grayscale_img, int thresh_type);
 	
 	// DROPLET VOLUME #########################################################################################
 	// Find the maximum area of a contour
-	double FindMaxContourArea(cv::Mat grayscale_img);
+	double FindMaxContourArea(cv::Mat grayscale_img, int thresh_type);
 	int FindMaxCCAreaLabel(cv::Mat Stats, int NumLabels);
 	// Find label with highest position centroid (in y direction)
 	int FindHighestLabel(cv::Mat Centroids, int NumLabels);
 	// Apply a mask that makes the main drop appear only
-	cv::Mat MainDropMask(cv::Mat grayscale_img);
+	cv::Mat MainDropMask(cv::Mat grayscale_img, int thresh_type);
 	// Calculate diameter of each level
 	int CalculateDiameter(cv::Mat main_drop_row);
 	// Calculate the droplet volume
@@ -101,13 +102,13 @@ namespace ImageProcessing
 	// DEBUG IMAGES ##############################################################################################
 	// NOTE: functions are only called if parameter is selected
 	// Draw Main Drop centroid
-	cv::Mat DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg);
+	cv::Mat DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type);
 	// Draw All Satellites
-	cv::Mat DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, float MainDropPos_mm);
+	cv::Mat DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, float MainDropPos_mm);
 	// Draw Ligament Length
-	cv::Mat DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg);
+	cv::Mat DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type);
 	// Draw Volume of Main Drop
-	cv::Mat DrawMainDropVolume(cv::Mat GrayscaleImg, cv::Mat ColorImg);
+	cv::Mat DrawMainDropVolume(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type);
 
 	// IMAGE DRAWING ###############################################################################################
 	// To draw only selected centroids.Allows selection of drawing params
@@ -131,7 +132,7 @@ namespace ImProcTest
 	// Test preprocessing
 	// Read in all images in input folder
 	// And output preprocessed images in output directory
-	bool test_preprocessing(std::string input_dir, std::string output_dir);
+	bool test_preprocessing(std::string input_dir, std::string output_dir, int thresh_type);
 
-	void test_DrawContours(std::string input_dir, std::string output_dir);
+	void test_DrawContours(std::string input_dir, std::string output_dir, int thresh_type);
 };
