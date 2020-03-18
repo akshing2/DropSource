@@ -21,7 +21,7 @@ System::Void DSCLR::DropSourceFrom::StartAnalysis_button_Click(System::Object^ s
 {
 	bool err = false;
 
-	if (UI_INPUR_ERROR_CHECK)
+	if (UI_INPUT_ERROR_CHECK)
 	{
 		err = User_Input_Error_Check();
 	}
@@ -325,6 +325,7 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 	bool isMainDrop = false;
 	bool endMainDrop = false;
 
+	cv::Mat tmp;
 
 	System::String^ pb_str = "Detecting Main Drop Positions";
 	ProgressBarUpdate(pb_str, 0, 100, 0, true);
@@ -333,8 +334,14 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 	int i = 0;
 	for (std::vector<cv::Mat>::iterator it = this->GrayscaleImages->begin(); it != this->GrayscaleImages->end(); ++it)
 	{
-		//bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i));
-		bin_img = ImageProcessing::BinaryThresh(*it, this->ThreshType);
+		tmp = *it;
+		if (this->ImgSubEn_cbox->Checked)
+		{
+			// subtract images
+			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
+		}
+
+		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
 		pb_str = "Main Drop Pos: " + i + "/" + GrayscaleImages->size();
 		// determine if main drop is on screen
@@ -453,6 +460,7 @@ void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 	bool isMainDrop = false;
 	bool endMainDrop = false;
 
+	cv::Mat tmp;
 
 	System::String^ pb_str = "Detecting Number of Satellites";
 	ProgressBarUpdate(pb_str, 0, 100, 0, true);
@@ -460,7 +468,14 @@ void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 	// Loop through grayscale images
 	for (int i = 0; i < GrayscaleImages->size(); i++)
 	{
-		bin_img = ImageProcessing::BinaryThresh(GrayscaleImages->at(i), this->ThreshType);
+		tmp = GrayscaleImages->at(i);
+
+		if (this->ImgSubEn_cbox->Checked)
+		{
+			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
+		}
+
+		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
 		pb_str = "No. Of Satellites: " + i + "/" + GrayscaleImages->size();
 		// determine if main drop is on screen
@@ -507,18 +522,24 @@ void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 void DSCLR::DropSourceFrom::CalculateLigLength()
 {
 	float LigLen = -1;
-	
+	cv::Mat tmp;
 	System::String^ pb_str = "Calculating Length of Ligaments";
 	ProgressBarUpdate(pb_str, 0, 100, 0, true);
 
 	for (int i = 0; i < this->GrayscaleImages->size(); i++)
 	{
 		pb_str = "Ligament Length: " + i + "/" + GrayscaleImages->size();
+		tmp = this->GrayscaleImages->at(i);
+
+		if (this->ImgSubEn_cbox->Checked)
+		{
+			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
+		}
 
 		if (this->MainDropPoints->at(i).y >= 0)
 		{
 			// main drop exists
-			LigLen = ImageProcessing::LengthOfLigament(this->GrayscaleImages->at(i), this->ThreshType);
+			LigLen = ImageProcessing::LengthOfLigament(tmp, this->ThreshType);
 		}
 
 		// append to lists
@@ -544,6 +565,7 @@ void DSCLR::DropSourceFrom::CalculateMainDropVol()
 	float ROI_Width = (float)(Convert::ToDouble(this->Width_text->Text));	// mm
 	float ROI_Height = (float)(Convert::ToDouble(this->Height_txt->Text));	// mm
 	cv::Mat MainDropImg;
+	cv::Mat tmp;
 
 	for (int i = 0; i < this->GrayscaleImages->size(); i++)
 	{
@@ -554,7 +576,12 @@ void DSCLR::DropSourceFrom::CalculateMainDropVol()
 		{
 			// main drop exists
 			// mask
-			MainDropImg = ImageProcessing::MainDropMask(this->GrayscaleImages->at(i), this->ThreshType);
+			tmp = this->GrayscaleImages->at(i);
+			if (this->ImgSubEn_cbox->Checked)
+			{
+				tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
+			}
+			MainDropImg = ImageProcessing::MainDropMask(tmp, this->ThreshType);
 			MainDropVol = ImageProcessing::MainDropVolume(MainDropImg, ROI_Width, ROI_Height);
 		}
 
@@ -785,6 +812,7 @@ void DSCLR::DropSourceFrom::DebugImages()
 	std::string fpFull;
 	std::string exten = ".png";
 	cv::Mat drawing;
+	cv::Mat tmp;
 	bool success = true;
 
 	System::String^ pb_str = "Drawing Debug Images";
@@ -793,6 +821,13 @@ void DSCLR::DropSourceFrom::DebugImages()
 	for (int i = 0; i < this->GrayscaleImages->size(); i++)
 	{
 		pb_str = "Debug Image: " + i + "/" + this->GrayscaleImages->size();
+		tmp = this->GrayscaleImages->at(i);
+
+		// account for image subtraction
+		if (this->ImgSubEn_cbox->Checked)
+		{
+			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
+		}
 
 		// clone colour image onto drawing
 		drawing = this->ColorImages->at(i).clone();
@@ -801,27 +836,27 @@ void DSCLR::DropSourceFrom::DebugImages()
 		if ((this->Position_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the volume
-			drawing = ImageProcessing::DrawMainDropVolume(this->GrayscaleImages->at(i), drawing, this->ThreshType);
+			drawing = ImageProcessing::DrawMainDropVolume(tmp, drawing, this->ThreshType);
 		}
 
 		// draw ligament length if main drop present
 		if ((this->LigLength_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the ligament
-			drawing = ImageProcessing::DrawLigamentLength(this->GrayscaleImages->at(i), drawing, this->ThreshType);
+			drawing = ImageProcessing::DrawLigamentLength(tmp, drawing, this->ThreshType);
 		}
 
 		// draw main drop position if present
 		if ((this->Position_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the ligament
-			drawing = ImageProcessing::DrawMainDropCent(this->GrayscaleImages->at(i), drawing, this->ThreshType);;
+			drawing = ImageProcessing::DrawMainDropCent(tmp, drawing, this->ThreshType);;
 		}
 
 		// draw satellites
 		if (this->Satellites_cbox->Checked)
 		{
-			drawing = ImageProcessing::DrawAllSatellites(this->GrayscaleImages->at(i), drawing,this->ThreshType, this->MainDropPosition->at(i));
+			drawing = ImageProcessing::DrawAllSatellites(tmp, drawing,this->ThreshType, this->MainDropPosition->at(i));
 		}
 
 		// Save drawing
@@ -1317,6 +1352,11 @@ void DSCLR::DropSourceFrom::TestFunctions()
 	{
 		TestMainDropMask();
 	}
+
+	if (TEST_IMG_SUBTRACTION)
+	{
+		TestImgSubtraction();
+	}
 }
 
 void DSCLR::DropSourceFrom::TestDetectPredict()
@@ -1365,6 +1405,30 @@ void DSCLR::DropSourceFrom::TestMainDropMask()
 	// main drop mask imgs
 	DrawMainDropMask();
 	
+}
+
+void DSCLR::DropSourceFrom::TestImgSubtraction()
+{
+	// load colour and grayscale images
+	LoadGrayscaleImages();
+	LoadColorImages();
+
+	// save reference gray img
+	cv::Mat gry_ref = this->GrayscaleImages->at(0);
+
+	// temp arrays
+	cv::Mat gry_i;
+	cv::Mat clr_i;
+	int thresh_type = this->ThreshType;
+
+	// loop through images and test
+	for (int i = 0; i < this->GrayscaleImages->size(); i++)
+	{
+		gry_i = this->GrayscaleImages->at(i);
+		clr_i = this->ColorImages->at(i);
+
+		ImProcTest::test_image_subtraction(gry_ref, gry_i, clr_i, thresh_type);
+	}
 }
 
 

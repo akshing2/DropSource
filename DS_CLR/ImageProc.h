@@ -53,6 +53,11 @@ namespace ImageProcessing
 	std::vector<cv::Mat> get_images(std::string input_dir, int IMREAD_TYPE);
 	// Preprocessing
 	cv::Mat BinaryThresh(cv::Mat image, int thresh_type);
+	// Image subtraction method
+	//	@param:
+	//		ref_img		->	reference image opened in grayscale, should be background only
+	//		src_img		->	image source opened in grayscale, should contain object(s)
+	cv::Mat GrayImageSubtraction(cv::Mat ref_img, cv::Mat src_img);
 
 	// MAIN DROP POSITIONS ####################################################################################
 	// returns a vector of mass centers for a single image
@@ -135,4 +140,6 @@ namespace ImProcTest
 	bool test_preprocessing(std::string input_dir, std::string output_dir, int thresh_type);
 
 	void test_DrawContours(std::string input_dir, std::string output_dir, int thresh_type);
+
+	void test_image_subtraction(cv::Mat gry_ref, cv::Mat gry_i, cv::Mat clr_i, int thresh_type);
 };

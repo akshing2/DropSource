@@ -59,7 +59,19 @@ namespace DSCLR {
 			ImageHeight_Px = 0;
 
 			// thresh type
-			ThreshType = -1;
+			
+			if (this->GlobalThresh_RdBtn->Checked)
+			{
+				ThreshType = THRESH_GLOBAL;
+			}
+			else if (this->AdaptiveThresh_RdBtn->Checked)
+			{
+				ThreshType = THRESH_ADAPTIVE;
+			}
+			else
+			{
+				ThreshType = -1;
+			}
 
 			// Initialise images
 			// Images
@@ -188,6 +200,7 @@ namespace DSCLR {
 	private: System::Windows::Forms::GroupBox^ ThreshGroupBox;
 	private: System::Windows::Forms::RadioButton^ AdaptiveThresh_RdBtn;
 	private: System::Windows::Forms::RadioButton^ GlobalThresh_RdBtn;
+private: System::Windows::Forms::CheckBox^ ImgSubEn_cbox;
 
 
 
@@ -261,6 +274,7 @@ namespace DSCLR {
 			this->ThreshGroupBox = (gcnew System::Windows::Forms::GroupBox());
 			this->AdaptiveThresh_RdBtn = (gcnew System::Windows::Forms::RadioButton());
 			this->GlobalThresh_RdBtn = (gcnew System::Windows::Forms::RadioButton());
+			this->ImgSubEn_cbox = (gcnew System::Windows::Forms::CheckBox());
 			this->ThreshGroupBox->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -731,9 +745,9 @@ namespace DSCLR {
 				static_cast<System::Byte>(0)));
 			this->ImageProcessing_lbl->Location = System::Drawing::Point(14, 499);
 			this->ImageProcessing_lbl->Name = L"ImageProcessing_lbl";
-			this->ImageProcessing_lbl->Size = System::Drawing::Size(204, 27);
+			this->ImageProcessing_lbl->Size = System::Drawing::Size(161, 27);
 			this->ImageProcessing_lbl->TabIndex = 41;
-			this->ImageProcessing_lbl->Text = L"Image Processing";
+			this->ImageProcessing_lbl->Text = L"Segmentation";
 			// 
 			// ThreshGroupBox
 			// 
@@ -766,12 +780,24 @@ namespace DSCLR {
 			this->GlobalThresh_RdBtn->Checked = true;
 			this->GlobalThresh_RdBtn->Location = System::Drawing::Point(6, 33);
 			this->GlobalThresh_RdBtn->Name = L"GlobalThresh_RdBtn";
-			this->GlobalThresh_RdBtn->Size = System::Drawing::Size(130, 20);
+			this->GlobalThresh_RdBtn->Size = System::Drawing::Size(148, 20);
 			this->GlobalThresh_RdBtn->TabIndex = 0;
 			this->GlobalThresh_RdBtn->TabStop = true;
-			this->GlobalThresh_RdBtn->Text = L"Global Threshold";
+			this->GlobalThresh_RdBtn->Text = L"Global Thresholding";
 			this->GlobalThresh_RdBtn->UseVisualStyleBackColor = true;
 			this->GlobalThresh_RdBtn->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::GlobalThresh_RdBtn_CheckedChanged);
+			// 
+			// ImgSubEn_cbox
+			// 
+			this->ImgSubEn_cbox->AutoSize = true;
+			this->ImgSubEn_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->ImgSubEn_cbox->Location = System::Drawing::Point(475, 526);
+			this->ImgSubEn_cbox->Name = L"ImgSubEn_cbox";
+			this->ImgSubEn_cbox->Size = System::Drawing::Size(234, 29);
+			this->ImgSubEn_cbox->TabIndex = 43;
+			this->ImgSubEn_cbox->Text = L"Enable Image Subtraction";
+			this->ImgSubEn_cbox->UseVisualStyleBackColor = true;
 			// 
 			// DropSourceFrom
 			// 
@@ -779,6 +805,7 @@ namespace DSCLR {
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::Control;
 			this->ClientSize = System::Drawing::Size(892, 797);
+			this->Controls->Add(this->ImgSubEn_cbox);
 			this->Controls->Add(this->ThreshGroupBox);
 			this->Controls->Add(this->ImageProcessing_lbl);
 			this->Controls->Add(this->DropAnalysis_lbl);
@@ -944,6 +971,7 @@ namespace DSCLR {
 		void TestBoundingRect();
 		void TestExtBotPoints();
 		void TestMainDropMask();
+		void TestImgSubtraction();
 
 	private: System::Void SimulateCrop_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
 	}

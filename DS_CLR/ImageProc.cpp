@@ -68,11 +68,30 @@ cv::Mat ImageProcessing::BinaryThresh(cv::Mat image, int thresh_type)
 	}
 	else if (thresh_type == THRESH_GLOBAL)
 	{
-		cv::threshold(pre_proc, pre_proc, 127, 255, cv::THRESH_BINARY_INV);
+		cv::threshold(pre_proc, pre_proc, 0, 255, cv::THRESH_BINARY);
 	}
 	
 
 	return pre_proc;
+}
+
+cv::Mat ImageProcessing::GrayImageSubtraction(cv::Mat ref_img, cv::Mat src_img)
+{
+	cv::Mat ret_img;
+	
+	// temporary arrays
+	cv::Mat tmp1;
+	cv::Mat tmp2;
+
+	// conversions
+	cv::convertScaleAbs(ref_img, tmp1, 0.5, 128);
+	cv::convertScaleAbs(src_img, tmp2, 0.5, 0);
+
+	// now subtract
+	//cv::subtract(tmp1, tmp2, ret_img);
+	cv::subtract(ref_img, src_img, ret_img);
+
+	return ret_img;
 }
 
 std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
@@ -663,6 +682,7 @@ cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorI
 cv::Mat ImageProcessing::DrawMainDropVolume(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type)
 {
 	cv::Mat drawing = ColorImg.clone();
+
 	cv::Mat MDMask = MainDropMask(GrayscaleImg, thresh_type);
 	std::vector<std::vector<cv::Point>> Contours;
 	std::vector<cv::Vec4i> Heirarchy;
@@ -757,6 +777,25 @@ void ImProcTest::test_DrawContours(std::string input_dir, std::string output_dir
 			cv::destroyWindow("Contoured Image");*/
 		}
 	}
+}
+
+void ImProcTest::test_image_subtraction(cv::Mat gry_ref, cv::Mat gry_i, cv::Mat clr_i, int thresh_type)
+{
+	cv::Mat sub = ImageProcessing::GrayImageSubtraction(gry_ref, gry_i);
+
+	// binarise
+	cv::Mat bin = ImageProcessing::BinaryThresh(sub, thresh_type);
+	cv::Mat bin_i = ImageProcessing::BinaryThresh(gry_i, thresh_type);
+
+	// show images
+	//cv::imshow("Reference", gry_ref);
+	cv::imshow("ith Grey Image", gry_i);
+	cv::imshow("Subtraction", sub);
+	cv::imshow("Binary of Subtraction", bin);
+	cv::imshow("Binary of ith Gray", bin_i);
+	cv::waitKey(0);
+	cv::destroyAllWindows();
+
 }
 
 cv::Point2f NumericalMethods::ForwardDifference(cv::Point2f rt0, cv::Point2f rt1)
