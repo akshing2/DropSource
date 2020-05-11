@@ -48,21 +48,35 @@ bool DSCLR::DropSourceFrom::User_Input_Error_Check()
 	// Check name of test is not empty
 	this->Error_NoT->Visible = check_non_empty_field(NameOfTest_Text->Text);
 	err = this->Error_NoT->Visible;
+
 	//check ROI
 	this->Error_ROI->Visible = (check_numerical_vals_input(Width_text->Text)) || (check_numerical_vals_input(Height_txt->Text));
 	if (!err) err = this->Error_ROI->Visible;
+
 	// check FPS
 	this->Error_FPS->Visible = (check_numerical_vals_input(FPS_text->Text));
 	if (!err) err = this->Error_FPS->Visible;
+
+	// Check UA if it is enabled
+	if (this->UA_Enable_cbox->Checked)
+	{
+		this->Error_UA->Visible = (!valid_number(SYS2std_string(UA_CFR_txt->Text)) + !valid_number(SYS2std_string(UA_ROI_Width_txt->Text)) 
+			+ !valid_number(SYS2std_string(UA_ROI_Height_txt->Text)));
+		if (!err) err = this->Error_UA->Visible;
+	}
+
 	// check Input Directory
 	this->Error_Input->Visible = check_non_empty_field(InputDir_text->Text);
 	if (!err) err = this->Error_Input->Visible;
+
 	// check output directory
 	this->Error_Output->Visible = check_non_empty_field(OutputDir_text->Text);
 	if (!err) err = this->Error_Output->Visible;
+
 	// check output file has been selected
 	this->Error_OutputFile->Visible = !(this->CSV_cbox->Checked + this->DebugImg_cbox->Checked + this->XLSX_cbox->Checked);
 	if (!err) err = this->Error_OutputFile->Visible;
+
 	// check at least one parameter is checked
 	this->Error_SelectParam->Visible = !(Position_cbox->Checked + Velocity_cbox->Checked + Satellites_cbox->Checked + LigLength_cbox->Checked + DropVolume_cbox->Checked);
 	if (!err) err = this->Error_SelectParam->Visible;
@@ -282,9 +296,18 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 void DSCLR::DropSourceFrom::LoadGrayscaleImages()
 {
 	std::vector<cv::Mat> gs = LoadImages(cv::IMREAD_GRAYSCALE);
+
 	for (int i = 0; i < gs.size(); i++)
 	{
 		GrayscaleImages->push_back(gs[i]);
+	}
+
+	// if UA enabled
+	if (this->UA_Enable_cbox->Checked)
+	{
+		std::tuple<float, float> del_img_w_h = UA_Images::get_del_img_w_h(gs);
+		this->del_IMG_W = std::get<0>(del_img_w_h);
+		this->del_IMG_H = std::get<1>(del_img_w_h);
 	}
 }
 
@@ -301,14 +324,22 @@ void DSCLR::DropSourceFrom::LoadColorImages()
 void DSCLR::DropSourceFrom::MakeTimeVector(int size)
 {
 	//std::vector<float> TimeVector;
-
+	// Calculate time in ms
 	float delta_t = 1/((float)(Convert::ToDouble(this->FPS_text->Text)))*1000;
 	int count = 0;
-	float time_t = 0;
-	for (int i = 0; i < size; i++)
+	float t0 = 0;	// initial time
+
+	// calculate the error in the time vector
+	float del_CFR_rel = this->del_CFR / this->CFR;
+	float t = -1;		// time at frame, k
+	float del_t = -1;	// abs error in time at frame, k
+
+	for (int k = 0; k < size; k++)
 	{
-		this->TimeVector->push_back(time_t);
-		time_t += delta_t;
+		t = t0 + k * (delta_t);		// calculate time of flight at frame, k
+		del_t = del_CFR_rel * t;	// calculate abs error in time of flight
+		this->TimeVector->push_back(t);
+		this->UA_TimeVector->push_back(del_t);
 	}
 
 }
@@ -325,6 +356,12 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 	bool isMainDrop = false;
 	bool endMainDrop = false;
 
+	std::tuple<float, float> del_dx_dy;
+	float dy;
+	float del_dx;
+	float del_dy;
+	float del_rmm;
+
 	cv::Mat tmp;
 
 	System::String^ pb_str = "Detecting Main Drop Positions";
@@ -339,6 +376,17 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		{
 			// subtract images
 			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
+		}
+
+		// If UA is checked, make sure to find del_dx and del_dy
+		if (this->UA_Enable_cbox->Checked)
+		{
+			// get conversion factor, dy itself
+			dy = this->ROI_H / (it->size().height);
+			// get error in conversion factors
+			del_dx_dy = UA_Images::get_del_dx_dy(*it, this->ROI_W, this->ROI_H, this->del_IMG_W, this->del_IMG_H, this->del_ROI_W, this->del_ROI_H);
+			del_dx = std::get<0>(del_dx_dy);
+			del_dy = std::get<1>(del_dx_dy);
 		}
 
 		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);
@@ -389,13 +437,20 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		if (detected_centroid.y != -1)
 		{
 			center_mm_y = Pixels2mm(detected_centroid.y, false);
+			// if uncertainty analysis enabled, find error
+			if (this->UA_Enable_cbox->Checked)
+			{
+				del_rmm = UA_Position::get_del_rmm(center_mm_y, this->del_rpx_rel, dy, del_dy);
+			}
 		}
 		else
 		{
 			center_mm_y = -1;
+			del_rmm = -1;
 		}
 		
 		this->MainDropPosition->push_back(center_mm_y);
+		this->UA_MainDropPosition->push_back(del_rmm);
 
 		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
 		i++;
@@ -601,6 +656,21 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 {
 	// clear everything before proceeding
 	ClearAllData();
+
+	// Store UA User inputs
+	if (this->UA_Enable_cbox->Checked)
+	{
+		// Express these in decimals
+		this->del_CFR = (float)(Convert::ToDouble(this->UA_CFR_txt->Text));
+		this->del_ROI_W = (float)(Convert::ToDouble(this->UA_ROI_Width_txt->Text));
+		this->del_ROI_H = (float)(Convert::ToDouble(this->UA_ROI_Height_txt->Text));
+	}
+	this->del_rpx_rel = 5 / 100;
+
+	// store numerical user inputs
+	this->CFR = (float)(Convert::ToDouble(this->FPS_text->Text));
+	this->ROI_W = (float)(Convert::ToDouble(this->Width_text->Text));
+	this->ROI_H = (float)(Convert::ToDouble(this->Height_txt->Text));
 
 	// Load images in
 	LoadGrayscaleImages();
