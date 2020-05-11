@@ -138,6 +138,7 @@
     <ClCompile Include="DropSourceFrom.cpp" />
     <ClCompile Include="ImageProc.cpp" />
     <ClCompile Include="pid.cpp" />
+    <ClCompile Include="UncertaintyAnalysis.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CSVWriter.h" />
@@ -150,6 +151,7 @@
     <ClInclude Include="Test_Macro.h" />
     <ClInclude Include="ThresholdingMethodsDefs.h" />
     <ClInclude Include="UI.h" />
+    <ClInclude Include="UncertaintyAnalysis.h" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DropSourceFrom.resx">

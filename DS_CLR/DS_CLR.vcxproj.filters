@@ -24,6 +24,9 @@
     <ClCompile Include="pid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UncertaintyAnalysis.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DropSourceFrom.h">
@@ -48,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ThresholdingMethodsDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UncertaintyAnalysis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
