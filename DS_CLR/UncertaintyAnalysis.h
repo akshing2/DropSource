@@ -36,7 +36,7 @@ namespace UA_Position
 // Functions to determine uncertainties in droplet velocity
 namespace UA_Velocity
 {
-
+	float get_del_v(float v0_i, float delta_rmm_i, float delta_t_ms, float del_rmm_i, float del_t_i);
 };
 
 // functions to determine uncertainties in ligament length of droplet

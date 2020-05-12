@@ -325,7 +325,7 @@ void DSCLR::DropSourceFrom::MakeTimeVector(int size)
 {
 	//std::vector<float> TimeVector;
 	// Calculate time in ms
-	float delta_t = 1/((float)(Convert::ToDouble(this->FPS_text->Text)))*1000;
+	float delta_t = 1/((float)(Convert::ToDouble(this->FPS_text->Text)))*1000;	// ms
 	int count = 0;
 	float t0 = 0;	// initial time
 
@@ -336,8 +336,8 @@ void DSCLR::DropSourceFrom::MakeTimeVector(int size)
 
 	for (int k = 0; k < size; k++)
 	{
-		t = t0 + k * (delta_t);		// calculate time of flight at frame, k
-		del_t = del_CFR_rel * t;	// calculate abs error in time of flight
+		t = t0 + k * (delta_t);		// calculate time of flight at frame, k in ms
+		del_t = del_CFR_rel * t;	// calculate abs error in time of flight in ms
 		this->TimeVector->push_back(t);
 		this->UA_TimeVector->push_back(del_t);
 	}
@@ -465,7 +465,15 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 void DSCLR::DropSourceFrom::MainDropVelocities()
 {
 	cv::Point2f Vel(-1,-1);
-	float delta_t = getDeltaT();
+	
+	// for uncertainty analysis
+	float delta_t = getDeltaT();	// ms
+	float delta_r = -1;				// mm
+	float del_v = -1;				// m/s
+	float del_rmm_i;
+	float del_tms_i;
+	float v0_i = -1;
+
 	System::String^ pb_str = "Calculating Main Drop Velocities";
 	ProgressBarUpdate(pb_str, 0, 100, 0, true);
 
@@ -481,22 +489,38 @@ void DSCLR::DropSourceFrom::MainDropVelocities()
 		{
 			// keep invalid formatting
 			Vel = MainDropPoints->at(i);
+			del_v = -1;
 		}
 		else {
 			if (MainDropPoints->at(i - 1).y <= -1)
 			{
 				// can't make a valid velocity calculation
-				Vel = MainDropPoints->at(i-1);
+				Vel = MainDropPoints->at(i-1);		// should be -1
+				del_v = -1;
 			}
 			else
 			{
 				// can calculate velocity
-				Vel = (MainDropPoints->at(i) - MainDropPoints->at(i - 1)) / delta_t;
+				Vel = (MainDropPoints->at(i) - MainDropPoints->at(i - 1)) / delta_t;	// px/ms
+
+				// calculate uncertainty in velocity if checkbox checked
+				if (this->UA_Enable_cbox->Checked)
+				{
+					delta_r = Pixels2mm((MainDropPoints->at(i).y - MainDropPoints->at(i - 1).y), false);	// mm
+					del_rmm_i = this->UA_MainDropPosition->at(i);											// mm
+					del_tms_i = this->UA_TimeVector->at(i);													// ms
+					v0_i = delta_r / delta_t;																// m/s
+
+					del_v = UA_Velocity::get_del_v(v0_i, delta_r, delta_t, del_rmm_i, del_tms_i);
+				}
+
 			}
 		}
 
 		this->Velocity_px->push_back(Vel);
-		this->MainDropVelocity->push_back(Pixels2mm(Vel.y,false));
+		this->MainDropVelocity->push_back(Pixels2mm(Vel.y,false));						// m/s
+		
+		if (this->UA_Enable_cbox->Checked) this->UA_MainDropVelocity->push_back(del_v);
 
 		ProgressBarUpdate(pb_str, 0, MainDropPoints->size(), i, true);
 	}
@@ -760,7 +784,7 @@ void DSCLR::DropSourceFrom::Write2XLSX()
 			sheet->writeStr(1, ParamCol[0], L"Frame");
 			sheet->writeStr(1, ParamCol[1], L"Time (ms)");
 			sheet->writeStr(1, ParamCol[2], L"Position (mm)");
-			sheet->writeStr(1, ParamCol[3], L"Velocity (mm/s)");
+			sheet->writeStr(1, ParamCol[3], L"Velocity (m/s)");
 			sheet->writeStr(1, ParamCol[4], L"Number of Satellites");
 			sheet->writeStr(1, ParamCol[5], L"Ligament Length (mm)");
 			sheet->writeStr(1, ParamCol[6], L"Volme of Droplet (mm^3)");

@@ -101,3 +101,24 @@ float UA_Position::get_del_rmm(float rpx, float del_rpx_rel, float dy, float del
 
 	return del_rmm;
 }
+
+// error in velocity calculations
+float UA_Velocity::get_del_v(float v0_i, float delta_rmm_i, float delta_t_ms, float del_rmm_i, float del_t_i)
+{
+	float del_v = -1;
+	
+	// first we calculate v_r+
+	float v_r = (delta_rmm_i + del_rmm_i) / delta_t_ms;		// m/s
+
+	// next, we calculate v_t+
+	float v_t = delta_rmm_i / (delta_t_ms + del_t_i);		// m/s
+
+	// now we do intermediate calculations
+	float C_r = abs(v_r - v0_i);
+	float C_t = abs(v_t - v0_i);
+
+	// finally we get the error in velocity
+	del_v = sqrt(C_r * C_r + C_t * C_t);
+
+	return del_v;
+}
