@@ -385,8 +385,8 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 			dy = this->ROI_H / (it->size().height);
 			// get error in conversion factors
 			del_dx_dy = UA_Images::get_del_dx_dy(*it, this->ROI_W, this->ROI_H, this->del_IMG_W, this->del_IMG_H, this->del_ROI_W, this->del_ROI_H);
-			del_dx = std::get<0>(del_dx_dy);
-			del_dy = std::get<1>(del_dx_dy);
+			this->del_dx = std::get<0>(del_dx_dy);
+			this->del_dy = std::get<1>(del_dx_dy);
 		}
 
 		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);
@@ -605,10 +605,17 @@ void DSCLR::DropSourceFrom::CalculateLigLength()
 	System::String^ pb_str = "Calculating Length of Ligaments";
 	ProgressBarUpdate(pb_str, 0, 100, 0, true);
 
+	// for Uncertainty Analysis
+	float del_LigLen;
+	float dy;
+
 	for (int i = 0; i < this->GrayscaleImages->size(); i++)
 	{
 		pb_str = "Ligament Length: " + i + "/" + GrayscaleImages->size();
 		tmp = this->GrayscaleImages->at(i);
+
+		// assume error is -1
+		del_LigLen = -1;
 
 		if (this->ImgSubEn_cbox->Checked)
 		{
@@ -619,11 +626,23 @@ void DSCLR::DropSourceFrom::CalculateLigLength()
 		{
 			// main drop exists
 			LigLen = ImageProcessing::LengthOfLigament(tmp, this->ThreshType);
+
+			// if UA is checked
+			if (this->UA_Enable_cbox->Checked)
+			{
+				// get dy first
+				dy = this->ROI_H / (GrayscaleImages->at(i).size().height);
+				// get liglen points
+				std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts = ImageProcessing::LigLenPoints(GrayscaleImages->at(i), this->ThreshType);
+				// get uncertainty in lig len
+				del_LigLen = UA_LigamentLength::get_del_liglen(ll_pts, this->del_rpx_rel, dy, this->del_dy);
+			}
 		}
 
 		// append to lists
 		this->LigamentLength_px->push_back(LigLen);
 		this->LigamentLength->push_back(Pixels2mm(LigLen, false));
+		this->UA_LigamentLength->push_back(del_LigLen);
 
 		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
 	}
@@ -689,7 +708,7 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 		this->del_ROI_W = (float)(Convert::ToDouble(this->UA_ROI_Width_txt->Text));
 		this->del_ROI_H = (float)(Convert::ToDouble(this->UA_ROI_Height_txt->Text));
 	}
-	this->del_rpx_rel = 5 / 100;
+	this->del_rpx_rel = ERROR_RELATIVE_OPEN_CV;		// set to default relative error for opencv (5%)
 
 	// store numerical user inputs
 	this->CFR = (float)(Convert::ToDouble(this->FPS_text->Text));

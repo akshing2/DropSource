@@ -416,15 +416,45 @@ std::vector<cv::Point2f> ImageProcessing::LigPoints(cv::Mat grayscale_img, int t
 	return LigamentPoints;
 }
 
+std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::LigLenPoints(cv::Mat grayscale_img, int thresh_type)
+{
+	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPts;
+
+	// 1. find main drop position
+	cv::Point2f MainDropPos = FindMainDropPos(grayscale_img, thresh_type);
+
+	// 2. find extreme bottom
+	cv::Point2f bxy = FindBottomMostPoint(grayscale_img, thresh_type);
+
+	// 3. find radius of head
+	float HeadRadius = Distance2Points(MainDropPos, bxy);
+
+	// 4. find bounding rectangle
+	cv::Rect2f Rect = FindMainDropRect(grayscale_img, thresh_type);
+
+	// 5. find edge of head and ligament, p1
+	cv::Point2f p1 = MainDropPos;
+	p1.y = p1.y - HeadRadius;
+
+	// 6. find tail end of ligament, p2
+	cv::Point2f p2 = MainDropPos;
+	p2.y = p2.y + HeadRadius - Rect.height;
+
+	LigLenPts = std::make_tuple(MainDropPos, bxy, p1, p2);
+
+	return LigLenPts;
+}
+
 float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img, int thresh_type)
 {
 	float LigLength = -1;
+	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPts = LigLenPoints(grayscale_img, thresh_type);
 
 	// 1. find main drop position
-	cv::Point2f pos = FindMainDropPos(grayscale_img, thresh_type);
+	cv::Point2f pos = std::get<0>(LigLenPts);
 
 	// 2. find extreme bottom
-	cv::Point2f ExtBot = FindBottomMostPoint(grayscale_img, thresh_type);
+	cv::Point2f ExtBot = std::get<1>(LigLenPts);
 
 	// 3. find radius of head
 	float HeadRadius = Distance2Points(pos, ExtBot);
@@ -433,12 +463,10 @@ float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img, int thresh_type)
 	cv::Rect2f Rect = FindMainDropRect(grayscale_img, thresh_type);
 
 	// 5. find edge of head and ligament, p1
-	cv::Point2f p1 = pos;
-	p1.y = p1.y - HeadRadius;
+	cv::Point2f p1 = std::get<2>(LigLenPts);
 
 	// 6. find tail end of ligament, p2
-	cv::Point2f p2 = pos;
-	p2.y = p2.y + HeadRadius - Rect.height;
+	cv::Point2f p2 = std::get<3>(LigLenPts);
 
 	if (Rect.height > HEIGHT_WIDTH_CMP* Rect.width)
 	{

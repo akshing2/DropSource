@@ -13,6 +13,9 @@
 
 */
 
+// definitions
+#define ERROR_RELATIVE_OPEN_CV	(5/100)		// Default relative error of centroid due to OpenCV
+
 // Functions to determine uncertainies in image properties (ie image width and height)
 namespace UA_Images
 {
@@ -42,7 +45,19 @@ namespace UA_Velocity
 // functions to determine uncertainties in ligament length of droplet
 namespace UA_LigamentLength
 {
-
+	// function to get error in radius calculation (px)
+	float get_del_R_px(std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts, float OpenCV_rel_err);
+	// function to get uncertainty in calculation of P1 (px)
+	// 0->del_P1x, 1->del_P1y
+	std::tuple<float, float> get_del_P1_x_y(cv::Point2f rpx, float OpenCV_rel_err, float del_R_px);
+	// function to get uncertainty in calculation of P2 (px)
+	// 0->delP2x, 1->del_P2y
+	std::tuple<float, float> get_del_P2_x_y(cv::Point2f rpx, float OpenCV_rel_err, float radius, float del_R_px, float h);
+	// function to get uncertainty in L (px)
+	float get_del_L_px(std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts, std::tuple<float, float> del_P1,
+		std::tuple<float, float> del_P2);
+	// function that returns uncertainty in L(mm)
+	float get_del_liglen(std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts, float OpenCV_rel_err, float dy, float del_dy);
 };
 
 // functions to determine uncertainties in main droplet volume

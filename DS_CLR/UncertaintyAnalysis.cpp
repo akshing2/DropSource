@@ -122,3 +122,125 @@ float UA_Velocity::get_del_v(float v0_i, float delta_rmm_i, float delta_t_ms, fl
 
 	return del_v;
 }
+
+float UA_LigamentLength::get_del_R_px(std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts, float OpenCV_rel_err)
+{
+	float del_R_px;
+	
+	// first initialise points in tuple as local variables
+	float rpx_x = std::get<0>(ll_pts).x;
+	float rpx_y = std::get<0>(ll_pts).y;
+	float bx = std::get<1>(ll_pts).x;
+	float by = std::get<1>(ll_pts).y;
+
+	// next, calculate absolute errors in tuple values, assumed they all have same rel error since OpenCV obtained values
+	float del_rpx_x = OpenCV_rel_err * rpx_x;
+	float del_rpx_y = OpenCV_rel_err * rpx_y;
+	float del_bx = OpenCV_rel_err * bx;
+	float del_by = OpenCV_rel_err * by;
+
+	// now we calculate error in radius squared, R2. This is done to make the maths easier.
+	float R2 = pow((bx - rpx_x), 2.0); +pow((by - rpx_y), 2.0);
+	// partial differentials
+	float dR2_dbx = (2*bx - 2*rpx_x);	// dR2/dbx
+	float dR2_dby = (2*by - 2*rpx_y);
+	float dR2_drpx_x = (2 * rpx_x - 2 * bx);
+	float dR2_drpx_y = (2 * rpx_y - 2 * by);
+	// calculate error in R2
+	float del_R2 = sqrt(pow((dR2_dbx*del_bx), 2.0) + pow((dR2_dby * del_by), 2.0) + pow((dR2_drpx_x * del_rpx_x), 2.0) + pow((dR2_drpx_y * del_rpx_y), 2.0));
+
+	// finally, we can determine error in radius R in px
+	// differentials
+	float dR_dR2 = 1 / (2 * sqrt(R2));
+	del_R_px = dR_dR2 * del_R2;
+
+
+	return del_R_px;
+}
+
+std::tuple<float, float> UA_LigamentLength::get_del_P1_x_y(cv::Point2f rpx, float OpenCV_rel_err, float del_R_px)
+{
+	float P1x = rpx.x;
+	float del_P1x = OpenCV_rel_err*P1x;
+	
+	float del_P1y = sqrt(pow((OpenCV_rel_err*rpx.y), 2.0) + pow( del_R_px, 2.0));
+
+	return std::tuple<float, float>(del_P1x, del_P1y);
+}
+
+std::tuple<float, float> UA_LigamentLength::get_del_P2_x_y(cv::Point2f rpx, float OpenCV_rel_err, float radius, float del_R_px, float h)
+{
+	float del_P2x = OpenCV_rel_err * rpx.x;
+
+	float del_rpx_y = OpenCV_rel_err * rpx.y;
+	float del_R = del_R_px;
+	float del_h = OpenCV_rel_err * h;
+	float del_P2y = sqrt(pow(del_rpx_y, 2.0) + pow(del_h, 2.0) + pow(-1*del_R, 2.0));
+
+	return std::tuple<float, float>(del_P2x, del_P2y);
+}
+
+float UA_LigamentLength::get_del_L_px(std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts, std::tuple<float, float> del_P1, std::tuple<float, float> del_P2)
+{
+	float del_L_px = 0;
+
+	// initialise points as local variables
+	float P1x = std::get<2>(ll_pts).x;
+	float P1y = std::get<2>(ll_pts).y;
+	float P2x = std::get<3>(ll_pts).x;
+	float P2y = std::get<3>(ll_pts).y;
+
+	// initialise uncertainties as variables
+	float del_P1x = std::get<0>(del_P1);
+	float del_P1y = std::get<1>(del_P1);
+	float del_P2x = std::get<0>(del_P2);
+	float del_P2y = std::get<1>(del_P2);
+
+	// variables for calculation
+	// using ligament length squared, L2 for easier maths
+	float L2 = pow((P1x - P2x), 2.0) + pow((P1y - P2y), 2.0);
+	// differentiables
+	float dL2_dP1x = 2 * P1x - 2 * P2x;
+	float dL2_dP1y = 2 * P1y - 2 * P2y;
+	float dL2_dP2x = 2 * P2x - 2 * P1x;
+	float dL2_dP2y = 2 * P2y - 2 * P1y;
+	// uncertainty in L2
+	float del_L2 = sqrt(pow((dL2_dP1x*del_P1x), 2.0) + pow((dL2_dP1y * del_P1y), 2.0) + pow((dL2_dP2x * del_P2x), 2.0) + pow((dL2_dP2y * del_P2y), 2.0));
+
+	// now we get the uncertainty in L (px)
+	float dL_dL2 = 1 / (2 * sqrt(L2));
+	del_L_px = dL_dL2 * del_L2;
+
+	return del_L_px;
+}
+
+float UA_LigamentLength::get_del_liglen(std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts, float OpenCV_rel_err, float dy, float del_dy)
+{
+	float del_ll = 0;
+	
+	// prelim stuff, calculate radis of main drop head
+	float head_radius = cv::norm(std::get<0>(ll_pts) - std::get<1>(ll_pts));
+	cv::Point2f rpx = std::get<0>(ll_pts);
+	cv::Point2f P2 = std::get<3>(ll_pts);
+	float h = P2.y + head_radius - rpx.y;
+
+	// 1. Get error in Radius calculation (px)
+	float del_R_px = get_del_R_px(ll_pts, OpenCV_rel_err);
+
+	// 2. Get error in x and y components of P1
+	std::tuple<float, float> del_P1 = get_del_P1_x_y(rpx, OpenCV_rel_err, del_R_px);
+
+	// 3. Get error in x and y components of P2
+	std::tuple<float, float> del_P2 = get_del_P2_x_y(rpx, OpenCV_rel_err, head_radius, del_R_px, h);
+
+	// 4. Get error in L (px)
+	float del_L_px = get_del_L_px(ll_pts, del_P1, del_P2);
+
+	// 5. Get error in L (mm)
+	float Lpx = cv::norm(std::get<2>(ll_pts) - std::get<3>(ll_pts));
+	float dLmm_ddy = Lpx;
+	float dLmm_dLpx = dy;
+	del_ll = sqrt(pow(dLmm_ddy * del_dy, 2.0) + pow(dLmm_dLpx * del_L_px, 2.0));
+
+	return del_ll;
+}
