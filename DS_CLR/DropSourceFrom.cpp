@@ -520,7 +520,7 @@ void DSCLR::DropSourceFrom::MainDropVelocities()
 		this->Velocity_px->push_back(Vel);
 		this->MainDropVelocity->push_back(Pixels2mm(Vel.y,false));						// m/s
 		
-		if (this->UA_Enable_cbox->Checked) this->UA_MainDropVelocity->push_back(del_v);
+		if (this->UA_Enable_cbox->Checked) this->UA_MainDropVelocity->push_back(del_v); // m/s
 
 		ProgressBarUpdate(pb_str, 0, MainDropPoints->size(), i, true);
 	}
