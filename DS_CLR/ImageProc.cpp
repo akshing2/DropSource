@@ -614,31 +614,74 @@ int ImageProcessing::CalculateDiameter(cv::Mat main_drop_row)
 	return Dia;
 }
 
-float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, float img_height)
+float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, float img_height, std::tuple<bool, float, float, float> UA_info, float* ret_del_v)
 {
-	float TotalVol = -1;
-	float LevelVol = 0;
-	float Area = 0;
+	float TotalVol = 0;	// total volume of droplet returned
+	float Vi = 0;			// volume of i'th thin disk
+	float Area = 0;			// Area of circular face of i'th thin disk
+	float X = 0;
+	float di = 0;			// diameter of i'th disk
 
 	// first get dx and dy
 	float dx = img_width / main_drop_img.cols;	// mm/px
 	float dy = img_height / main_drop_img.rows;	// mm/px
 
+	// for uncertainty analysis
+	bool UA_flag = std::get<0>(UA_info);
+	float del_dx = std::get<1>(UA_info);
+	float del_H = std::get<2>(UA_info);
+	float del_ocv_rel = std::get<3>(UA_info);
+	float del_X;
+	float del_di;
+	float del_Vi = 0;
+
+	// sum of upper and lower bounds of volume
+	float V_hi = 0;
+	float Vi_hi = 0;
+	float V_lo = 0;
+	float Vi_lo = 0;
+	float del_V = -1;
+
+	bool init_reset_flag = true;
+
 	// itterate row by row
 	for (int row = 0; row < main_drop_img.rows; row++)
 	{
 		// Get area of each row
-		Area = PI * CalculateDiameter(main_drop_img.row(row)) * dx;
-		LevelVol = Area * dy;
+		X = CalculateDiameter(main_drop_img.row(row)); // done thru open cv
+		di = X * dx;
+		Area = PI * di;
+		Vi = Area * dy;
 
-		if (LevelVol > 0)
+		TotalVol += Vi;
+
+		// do uncertainty analysis if cbox checked
+		if (UA_flag)
 		{
-			TotalVol = 0;
+			del_X = del_ocv_rel * X;
+			// uncertainty in diamater of i'th disk
+			del_di = UA_Volume::get_del_di(X, dx, del_X, del_dx);
+			// uncertainty in volume of i'th disk
+			del_Vi = UA_Volume::get_del_Vi(di, dy, del_di, del_H);
+			// sum up to get upper bound of volume
+			Vi_hi = Vi + del_Vi;
+			V_hi += Vi_hi;
+			// sum up to get lower bound of volume
+			Vi_lo = (Vi - del_Vi);
+			V_lo += Vi_lo;
 		}
-
-		TotalVol += LevelVol;
 	}
 
+	if (UA_flag)
+	{
+		// comparison values
+		float Cv_hi = abs(TotalVol - V_hi);
+		float Cv_lo = abs(TotalVol - V_lo);
+		// finally, the error in volume
+		del_V = (Cv_hi + Cv_lo)/2;
+	}
+
+	*ret_del_v = del_V;
 	return TotalVol;
 }
 

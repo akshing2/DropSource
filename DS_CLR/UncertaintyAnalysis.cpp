@@ -244,3 +244,27 @@ float UA_LigamentLength::get_del_liglen(std::tuple<cv::Point2f, cv::Point2f, cv:
 
 	return del_ll;
 }
+
+float UA_Volume::get_del_di(float X, float dx, float del_X, float del_dx)
+{
+	// differentiables
+	float ddi_dX = dx;
+	float ddi_ddx = X;
+
+	// calculate error
+	float del_di = sqrt(pow((ddi_dX*del_X),2.0) + pow((ddi_ddx*del_dx), 2.0));
+	
+	return del_di;
+}
+
+float UA_Volume::get_del_Vi(float di, float H, float del_di, float del_H)
+{
+	// differentiables
+	float dVi_dH = PI * di;
+	float dVi_ddi = PI * H;
+
+	// calculate uncertainty in Vi
+	float del_Vi = sqrt(pow((dVi_dH*del_H), 2.0) + pow((dVi_ddi*del_di), 2.0));
+
+	return del_Vi;
+}

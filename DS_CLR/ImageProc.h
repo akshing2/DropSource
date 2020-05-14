@@ -17,6 +17,7 @@
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
 #include "ThresholdingMethodsDefs.h"
+#include "UncertaintyAnalysis.h"
 
 #define MIN_SATELLITE_SIZE	10
 #define MAX_SATELLITE_SIZE	15
@@ -105,7 +106,9 @@ namespace ImageProcessing
 	// Calculate diameter of each level
 	int CalculateDiameter(cv::Mat main_drop_row);
 	// Calculate the droplet volume
-	float MainDropVolume(cv::Mat main_drop_img, float img_width, float img_height);
+	// addition of UA_info to conduct uncertainty analysis
+	// 0->UA_flag, 1->del_dx, 2->del_dy, 3->del_ocv_rel
+	float MainDropVolume(cv::Mat main_drop_img, float img_width, float img_height, std::tuple<bool, float, float, float> UA_info, float* ret_del_v);
 
 	// DEBUG IMAGES ##############################################################################################
 	// NOTE: functions are only called if parameter is selected

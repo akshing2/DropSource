@@ -14,7 +14,8 @@
 */
 
 // definitions
-#define ERROR_RELATIVE_OPEN_CV	(5/100)		// Default relative error of centroid due to OpenCV
+#define ERROR_RELATIVE_OPEN_CV	5		// Default relative error of centroid due to OpenCV (%)
+#define PI	3.14159265358979323846
 
 // Functions to determine uncertainies in image properties (ie image width and height)
 namespace UA_Images
@@ -63,5 +64,8 @@ namespace UA_LigamentLength
 // functions to determine uncertainties in main droplet volume
 namespace UA_Volume
 {
-
+	// uncertainty in diameter of i'th disk
+	float get_del_di(float X, float dx, float del_X, float del_dx);
+	// uncertainty in volume of i'th disk
+	float get_del_Vi(float di, float H, float del_di, float del_H);
 };

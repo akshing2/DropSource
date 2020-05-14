@@ -481,6 +481,8 @@ void DSCLR::DropSourceFrom::MainDropVelocities()
 	this->Velocity_px->push_back(Vel);
 	this->MainDropVelocity->push_back(Pixels2mm(Vel.y, false));
 
+	if (this->UA_Enable_cbox->Checked) this->UA_MainDropVelocity->push_back(del_v); // m/s
+
 	// loop through main droplet positions and calculate velocity
 	for (int i = 1; i < MainDropPoints->size(); i++)
 	{
@@ -637,6 +639,8 @@ void DSCLR::DropSourceFrom::CalculateLigLength()
 				// get uncertainty in lig len
 				del_LigLen = UA_LigamentLength::get_del_liglen(ll_pts, this->del_rpx_rel, dy, this->del_dy);
 			}
+
+			if (LigLen < 0) del_LigLen = -1;
 		}
 
 		// append to lists
@@ -665,6 +669,13 @@ void DSCLR::DropSourceFrom::CalculateMainDropVol()
 	cv::Mat MainDropImg;
 	cv::Mat tmp;
 
+	// tupple for UA in drop volume
+	std::tuple<bool, float, float, float>UA_info(this->UA_Enable_cbox->Checked, (float)this->del_dx, 
+		(float)this->del_dy, 0.05);
+	// uncertainty in droplet volume
+	float del_V;
+	float del_V_temp;
+
 	for (int i = 0; i < this->GrayscaleImages->size(); i++)
 	{
 		pb_str = "Drop Volume: " + i + "/" + GrayscaleImages->size();
@@ -680,11 +691,19 @@ void DSCLR::DropSourceFrom::CalculateMainDropVol()
 				tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
 			}
 			MainDropImg = ImageProcessing::MainDropMask(tmp, this->ThreshType);
-			MainDropVol = ImageProcessing::MainDropVolume(MainDropImg, ROI_Width, ROI_Height);
+			MainDropVol = ImageProcessing::MainDropVolume(MainDropImg, ROI_Width, ROI_Height, UA_info, &del_V_temp);
+			del_V = del_V_temp;
 		}
+
+		if (MainDropVol < 0)
+		{
+			del_V = MainDropVol;
+		}
+		
 
 		// append to lists
 		this->Volume->push_back(MainDropVol);
+		this->UA_Volume->push_back(del_V);
 
 		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
 	}
@@ -708,7 +727,7 @@ void DSCLR::DropSourceFrom::DropletAnalysis()
 		this->del_ROI_W = (float)(Convert::ToDouble(this->UA_ROI_Width_txt->Text));
 		this->del_ROI_H = (float)(Convert::ToDouble(this->UA_ROI_Height_txt->Text));
 	}
-	this->del_rpx_rel = ERROR_RELATIVE_OPEN_CV;		// set to default relative error for opencv (5%)
+	this->del_rpx_rel = ERROR_RELATIVE_OPEN_CV/100;		// set to default relative error for opencv (5%)
 
 	// store numerical user inputs
 	this->CFR = (float)(Convert::ToDouble(this->FPS_text->Text));
@@ -777,7 +796,11 @@ void DSCLR::DropSourceFrom::Write2XLSX()
 {
 	libxl::Book* wbook = xlCreateXMLBook();
 	bool success = false;
-	int ParamCol[7] = {0, 1, 2, 3, 4, 5, 6};
+
+	bool UA_flag = this->UA_Enable_cbox->Checked;
+
+	int ParamCol[7] = {0, 1, 2, 3 + 1*(UA_flag), 4 + 2*(UA_flag), 5 + 2*(UA_flag), 6 + 3*(UA_flag)};
+	int delParamCol[4] = { 3, 5, 8, 10 };
 	System::String^ pb_str = "Writing to XLSX";
 	if (wbook)
 	{
@@ -808,6 +831,15 @@ void DSCLR::DropSourceFrom::Write2XLSX()
 			sheet->writeStr(1, ParamCol[5], L"Ligament Length (mm)");
 			sheet->writeStr(1, ParamCol[6], L"Volme of Droplet (mm^3)");
 
+			// same but for uncertainties
+			if (UA_flag)
+			{
+				sheet->writeStr(1, delParamCol[0], L"Position Uncertainty (mm)");
+				sheet->writeStr(1, delParamCol[1], L"Velocity Uncertainty (m/s)");
+				sheet->writeStr(1, delParamCol[2], L"Ligament Length uncertainty (mm)");
+				sheet->writeStr(1, delParamCol[3], L"Volume Uncertainty (mm^3)");
+			}
+			
 			// loop through data and add
 			
 			ProgressBarUpdate(pb_str, 0, 100, 0, true);
@@ -819,11 +851,13 @@ void DSCLR::DropSourceFrom::Write2XLSX()
 
 				// always add position as this is always needed
 				sheet->writeNum(row + 2, ParamCol[2], this->MainDropPosition->at(row));
+				if (UA_flag) sheet->writeNum(row + 2, delParamCol[0], this->UA_MainDropPosition->at(row));
 
 				// add velocity if requested
 				if (this->Velocity_cbox->Checked)
 				{
 					sheet->writeNum(row + 2, ParamCol[3], this->MainDropVelocity->at(row));
+					if (UA_flag) sheet->writeNum(row + 2, delParamCol[1], this->UA_MainDropVelocity->at(row));
 				}
 
 				// add number of satellites if requested
@@ -836,13 +870,16 @@ void DSCLR::DropSourceFrom::Write2XLSX()
 				if (this->LigLength_cbox->Checked)
 				{
 					sheet->writeNum(row + 2, ParamCol[5], this->LigamentLength->at(row));
+					if (UA_flag) sheet->writeNum(row + 2, delParamCol[2], this->UA_LigamentLength->at(row));
 				}
 
 				// add drop volume if requested
 				if (this->DropVolume_cbox->Checked)
 				{
 					sheet->writeNum(row + 2, ParamCol[6], this->Volume->at(row));
+					if (UA_flag) sheet->writeNum(row + 2, delParamCol[3], this->UA_Volume->at(row));
 				}
+
 				pb_str = "CSV File: " + row + "/" + GrayscaleImages->size();
 				ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), row, true);
 			}
