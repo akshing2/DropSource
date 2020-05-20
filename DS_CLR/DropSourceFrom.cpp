@@ -364,6 +364,8 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 
 	cv::Mat tmp;
 
+	int MaxDropsOnScreen = 0;
+
 	System::String^ pb_str = "Detecting Main Drop Positions";
 	ProgressBarUpdate(pb_str, 0, 100, 0, true);
 
@@ -392,6 +394,18 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
 		pb_str = "Main Drop Pos: " + i + "/" + GrayscaleImages->size();
+
+		// check if number of drops on screen has changed
+		if (Centers.size() != MaxDropsOnScreen)
+		{
+			// number on drops on screen has changed, check
+			// if  it has decreased or increased
+			if (Centers.size() > MaxDropsOnScreen) MaxDropsOnScreen = Centers.size();
+
+			// if decreased, then we can assume main drop has left ROI
+			if (Centers.size() < MaxDropsOnScreen) endMainDrop = true;
+		}
+
 		// determine if main drop is on screen
 		if (Centers.size() > 0 && !endMainDrop)
 		{
@@ -1000,7 +1014,7 @@ void DSCLR::DropSourceFrom::DebugImages()
 		if ((this->Position_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the ligament
-			drawing = ImageProcessing::DrawMainDropCent(tmp, drawing, this->ThreshType);;
+			drawing = ImageProcessing::DrawMainDropCent(tmp, drawing, this->ThreshType, this->MainDropPoints->at(i));;
 		}
 
 		// draw satellites

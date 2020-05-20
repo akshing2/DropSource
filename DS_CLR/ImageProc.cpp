@@ -589,9 +589,13 @@ int ImageProcessing::CalculateDiameter(cv::Mat main_drop_row)
 	int LeftMost = 0;
 	int RightMost = 0;
 
+	// Ideally, noise has been taken care of so just count non zeros in row
+	
+	//Dia = cv::countNonZero(main_drop_row);
+
 	for (int col = 0; col < main_drop_row.cols; col++)
 	{
-		if (main_drop_row.at<uchar>(0, col))
+		if (main_drop_row.at<uchar>(0, col) > 0)
 		{
 			// there is a 1 in this binary image
 			if (LeftMost == 0)
@@ -650,7 +654,7 @@ float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, fl
 		// Get area of each row
 		X = CalculateDiameter(main_drop_img.row(row)); // done thru open cv
 		di = X * dx;
-		Area = PI * di;
+		Area = PI * pow((di/2), 2.0);
 		Vi = Area * dy;
 
 		TotalVol += Vi;
@@ -685,20 +689,21 @@ float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, fl
 	return TotalVol;
 }
 
-cv::Mat ImageProcessing::DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type)
+cv::Mat ImageProcessing::DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, cv::Point2f MainDropPoint)
 {
-	cv::Mat drawing;
+	cv::Mat drawing = ColorImg.clone();
 	// Centroid drawin in red colour
 	cv::Scalar red = Scalar(0, 0, 255);
 	// draw in radius of 2
 	int radius = 2;
 
-	cv::Point2f MainDropPos = FindMainDropPos(GrayscaleImg, thresh_type);
+	//cv::Point2f MainDropPos = FindMainDropPos(GrayscaleImg, thresh_type);
 	std::vector<cv::Point2f>Centers2Draw;
-	Centers2Draw.push_back(MainDropPos);
+	Centers2Draw.push_back(MainDropPoint);
 
 	// now draw main drop positions
-	drawing = DrawSelectedCentroids(ColorImg, Centers2Draw, red, radius);
+	// draw only if position is valid (ie >= 0)
+	if (MainDropPoint.y >= 0) drawing = DrawSelectedCentroids(ColorImg, Centers2Draw, red, radius);
 
 	return drawing;
 }

@@ -113,7 +113,7 @@ namespace ImageProcessing
 	// DEBUG IMAGES ##############################################################################################
 	// NOTE: functions are only called if parameter is selected
 	// Draw Main Drop centroid
-	cv::Mat DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type);
+	cv::Mat DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, cv::Point2f MainDropPoint);
 	// Draw All Satellites
 	cv::Mat DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, float MainDropPos_mm);
 	// Draw Ligament Length
