@@ -94,6 +94,24 @@ cv::Mat ImageProcessing::GrayImageSubtraction(cv::Mat ref_img, cv::Mat src_img)
 	return ret_img;
 }
 
+cv::Mat ImageProcessing::CannyEdgeDetect(cv::Mat grayscale_img, int HighThresh, int LowThresh, int edgeThresh, int kernel_size)
+{	
+	cv::Mat dest, detected_edges;
+
+	// reduce noise with specified kernel size
+	cv::GaussianBlur(grayscale_img, detected_edges, cv::Size(kernel_size, kernel_size), 0);
+
+	// canny detector
+	cv::Canny(detected_edges, detected_edges, LowThresh, HighThresh, kernel_size);
+
+	// use canny's output as mask to show edges
+	dest = Scalar::all(0);
+
+	grayscale_img.copyTo(dest, detected_edges);
+
+	return dest;
+}
+
 std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
 {
 	//std::vector<cv::Point2f> centers;
@@ -593,23 +611,44 @@ int ImageProcessing::CalculateDiameter(cv::Mat main_drop_row)
 	
 	//Dia = cv::countNonZero(main_drop_row);
 
+	//for (int col = 0; col < main_drop_row.cols; col++)
+	//{
+	//	if (main_drop_row.at<uchar>(0, col) > 0)
+	//	{
+	//		// there is a 1 in this binary image
+	//		if (LeftMost == 0)
+	//		{
+	//			// new leftmost pixel
+	//			LeftMost = col;
+	//		}
+
+	//		if (col > RightMost)
+	//		{
+	//			// keep updating rightmost
+	//			RightMost = col;
+	//		}
+
+	//	}
+	//}
+
+
+	// first find left most pixel in row
 	for (int col = 0; col < main_drop_row.cols; col++)
 	{
 		if (main_drop_row.at<uchar>(0, col) > 0)
 		{
-			// there is a 1 in this binary image
-			if (LeftMost == 0)
-			{
-				// new leftmost pixel
-				LeftMost = col;
-			}
+			LeftMost = col;
+			break;
+		}
+	}
 
-			if (col > RightMost)
-			{
-				// keep updating rightmost
-				RightMost = col;
-			}
-
+	// now find right most pixel
+	for (int col = main_drop_row.cols-1; col > 0; col--)
+	{
+		if (main_drop_row.at<uchar>(0, col) > 0)
+		{
+			RightMost = col;
+			break;
 		}
 	}
 
@@ -618,7 +657,7 @@ int ImageProcessing::CalculateDiameter(cv::Mat main_drop_row)
 	return Dia;
 }
 
-float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, float img_height, std::tuple<bool, float, float, float> UA_info, float* ret_del_v)
+float ImageProcessing::MainDropVolume(cv::Mat grayscale_img, float img_width, float img_height, int thresh_type, std::tuple<bool, float, float, float> UA_info, float* ret_del_v)
 {
 	float TotalVol = 0;	// total volume of droplet returned
 	float Vi = 0;			// volume of i'th thin disk
@@ -627,8 +666,8 @@ float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, fl
 	float di = 0;			// diameter of i'th disk
 
 	// first get dx and dy
-	float dx = img_width / main_drop_img.cols;	// mm/px
-	float dy = img_height / main_drop_img.rows;	// mm/px
+	float dx = img_width / grayscale_img.size().width;		// mm/px
+	float dy = img_height / grayscale_img.size().height;	// mm/px
 
 	// for uncertainty analysis
 	bool UA_flag = std::get<0>(UA_info);
@@ -646,9 +685,22 @@ float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, fl
 	float Vi_lo = 0;
 	float del_V = -1;
 
+	// canny edge detector params
+	int LowThresh = 127;
+	int HighThresh = 255;
+	int edgeThresh = 1;
+	int kernal_size = 3;
+
 	bool init_reset_flag = true;
 
-	
+	//cv::Mat main_drop_img = MainDropMask(grayscale_img, thresh_type);
+	cv::Mat main_drop_img = CannyEdgeDetect(grayscale_img, HighThresh, LowThresh, edgeThresh, kernal_size);
+
+	// let's check if we get the canny image we want
+	/*cv::imshow("Gray Image", grayscale_img);
+	cv::imshow("Canny Image", main_drop_img);
+	cv::waitKey(0);
+	cv::destroyAllWindows();*/
 
 	// itterate row by row
 	for (int row = 0; row < main_drop_img.rows; row++)
@@ -690,6 +742,93 @@ float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, fl
 
 	*ret_del_v = del_V;
 	return TotalVol;
+}
+
+// assume that this function is only called when the main droplet is present
+float ImageProcessing::SubPixelVolume(cv::Mat grayscale_img, cv::Mat color_img, float img_width, float img_height)
+{
+	// variables for volume calculation
+	float R_px;												// R(theta) in subpixel edge detection
+	float R_mm;												// R(theta) in subpixel edge detection converted to mm
+	float integral_sum = 0;									// where sum of the integral is stored
+	float dx = img_width / grayscale_img.size().width;		// mm/px
+	float dy = img_height / grayscale_img.size().height;	// mm/px
+	float theta_i;											// direction of i'th response
+	float MainDropVol = 0;									// returned value (mm^3)
+
+	// parameters for sub pixel edge detection
+	double alpha = 0.5;
+	int low = 0;
+	int high = 127;
+	std::vector<Contour> contours;		// vector of Contour structs from EdgesSubPix.h
+	std::vector<cv::Vec4i> heirarchy;
+	int mode = cv::RETR_TREE;			// same mode used in finding main drop points
+
+	// perform sub pixel edge detection
+	EdgesSubPix(grayscale_img, alpha, low, high, contours, heirarchy, mode);
+
+	// need to see if it works like I want
+	// let's see if the first contour is always the main drop (it is)
+	/*cv::Mat draw = DrawSubPixEdge(color_img, contours);
+	cv::imshow("Grayscale image", grayscale_img);
+	cv::imshow("Sub pixel edge detection", draw);
+	cv::waitKey(0);
+	cv::destroyAllWindows();*/
+
+	// Need to perform the integration
+	Contour MainDropCnt = contours.at(0);		// looking at the main drop only
+	
+	for (int i = 0; i < MainDropCnt.response.size(); i++)
+	{
+		// loop through every response and measure integral sum
+		// first, convert units of response, R, from px to mm
+		R_px = MainDropCnt.response.at(i);
+		theta_i = MainDropCnt.direction.at(i);
+		R_mm = ResponsePX2MM(R_px, theta_i, dx, dy);	// response now in mm instead of px
+		// only add integral sum if theta is between 0 and pi
+		if (theta_i <= PI) integral_sum += pow(R_mm, 3.0) * sin(theta_i);	// might need to check if this is valid
+		
+	}
+
+	// now we try main drop volume
+	MainDropVol = 2.0 / 3.0 * PI * integral_sum;
+
+	return MainDropVol;
+}
+
+cv::Mat ImageProcessing::DrawSubPixEdge(cv::Mat gray_img, std::vector<Contour> EdgeContours)
+{
+	cv::Mat drawing = gray_img.clone();
+
+	int radius = 1;
+	cv::Scalar green(0, 255, 0);
+
+	// draw the points in cartesian coordinates
+	for (int i = 0; i < 1; i++)
+	{
+		// looping through each contour (represents a body)
+
+		for (int j = 0; j < EdgeContours.at(i).points.size(); j++)
+		{
+			// loop through and draw every point
+			cv::circle(drawing, EdgeContours.at(i).points.at(j), radius, green);
+		}
+
+	}
+
+	return drawing;
+}
+
+float ImageProcessing::ResponsePX2MM(float R_px, float theta, float dx, float dy)
+{
+	float R_mm = 0;
+
+	float Rx_mm = R_px * sin(theta) * dx;	// X component of response in mm
+	float Ry_mm = R_px * cos(theta) * dy;	// Y component of response in mm
+
+	R_mm = sqrt(pow(Rx_mm, 2.0) + pow(Ry_mm, 2.0));
+
+	return R_mm;
 }
 
 cv::Mat ImageProcessing::DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, cv::Point2f MainDropPoint)

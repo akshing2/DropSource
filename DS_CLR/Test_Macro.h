@@ -28,6 +28,7 @@
 // Enable Droplet Analysis Tests
 #define TEST_TIME_VECTOR			0
 #define TEST_DROPLET_ANALYSIS		0
+#define TEST_SUBPIXEDGE				0
 
 // enable the main loop function
 #define MAIN_ENABLE					UI_INPUT_ERROR_CHECK

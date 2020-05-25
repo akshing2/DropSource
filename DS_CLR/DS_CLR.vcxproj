@@ -136,6 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DropSourceFrom.cpp" />
+    <ClCompile Include="EdgesSubPix.cpp" />
     <ClCompile Include="ImageProc.cpp" />
     <ClCompile Include="pid.cpp" />
     <ClCompile Include="UncertaintyAnalysis.cpp" />
@@ -145,6 +146,7 @@
     <ClInclude Include="DropSourceFrom.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="EdgesSubPix.h" />
     <ClInclude Include="ImageProc.h" />
     <ClInclude Include="pid.h" />
     <ClInclude Include="PID_Params.h" />

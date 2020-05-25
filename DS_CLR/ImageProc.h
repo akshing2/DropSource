@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include "ThresholdingMethodsDefs.h"
 #include "UncertaintyAnalysis.h"
+#include "EdgesSubPix.h"
 
 #define MIN_SATELLITE_SIZE	10
 #define MAX_SATELLITE_SIZE	15
@@ -59,6 +60,8 @@ namespace ImageProcessing
 	//		ref_img		->	reference image opened in grayscale, should be background only
 	//		src_img		->	image source opened in grayscale, should contain object(s)
 	cv::Mat GrayImageSubtraction(cv::Mat ref_img, cv::Mat src_img);
+	// Canny edge detection operation. Provides a binary image of detected edges
+	cv::Mat CannyEdgeDetect(cv::Mat grayscale_img, int HighThresh, int LowThresh, int edgeThresh, int kernel_size);
 
 	// MAIN DROP POSITIONS ####################################################################################
 	// returns a vector of mass centers for a single image
@@ -108,7 +111,16 @@ namespace ImageProcessing
 	// Calculate the droplet volume
 	// addition of UA_info to conduct uncertainty analysis
 	// 0->UA_flag, 1->del_dx, 2->del_dy, 3->del_ocv_rel
-	float MainDropVolume(cv::Mat main_drop_img, float img_width, float img_height, std::tuple<bool, float, float, float> UA_info, float* ret_del_v);
+	float MainDropVolume(cv::Mat grayscale_img, float img_width, float img_height, int thresh_type, std::tuple<bool, float, float, float> UA_info, float* ret_del_v);
+	// Updated method to calculate volume of main droplet
+	// Use of subpixel edge detection method and volume of revolution using polar coordinates
+	// img_width and omg_height are mm ROI measurements
+	// May need to implement some form of uncertainty analysis later
+	float SubPixelVolume(cv::Mat grayscale_img, cv::Mat color_img, float img_width, float img_height);
+	// function to draw results of sub pixel edge detection
+	cv::Mat DrawSubPixEdge(cv::Mat gray_img, std::vector<Contour> EdgeContours);
+	// function to convert response from px to mm in subpixel edge detection
+	float ResponsePX2MM(float R_px, float theta, float dx, float dy);
 
 	// DEBUG IMAGES ##############################################################################################
 	// NOTE: functions are only called if parameter is selected

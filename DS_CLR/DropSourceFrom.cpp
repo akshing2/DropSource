@@ -282,7 +282,7 @@ std::vector<cv::Mat> DSCLR::DropSourceFrom::LoadImages(int IMREAD_TYPE)
 	// Finished loading
 	pb_str = "Finished Loading!";
 	this->PB_Label->Text = pb_str;
-	ProgressVal = 100;
+	ProgressVal = this->GrayscaleImages->size();
 	this->ProgressBar->Value = ProgressVal;
 
 	// Set progress par invisible again
@@ -699,21 +699,31 @@ void DSCLR::DropSourceFrom::CalculateMainDropVol()
 
 		MDCountPx = 0;
 
+		
+		
+
 		if (this->MainDropPoints->at(i).y >= 0)
 		{
 			// main drop exists
+			
 			// mask
 			tmp = this->GrayscaleImages->at(i);
 			if (this->ImgSubEn_cbox->Checked)
 			{
 				tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
 			}
-			MainDropImg = ImageProcessing::MainDropMask(tmp, this->ThreshType);
+			// if we enable sub pixel edge detection testing
+			if (TEST_SUBPIXEDGE)
+			{
+				MainDropVol = ImageProcessing::SubPixelVolume(this->GrayscaleImages->at(i), this->ColorImages->at(i), ROI_Width, ROI_Height);
+				del_V = this->del_rpx_rel * MainDropVol;
+			}
+			else {
+				MainDropVol = ImageProcessing::MainDropVolume(this->GrayscaleImages->at(i), ROI_Width, ROI_Height, this->ThreshType, UA_info, &del_V_temp);
+
+				del_V = del_V_temp;
+			}
 			
-			MainDropVol = ImageProcessing::MainDropVolume(MainDropImg, ROI_Width, ROI_Height, UA_info, &del_V_temp);
-
-
-			del_V = del_V_temp;
 		}
 
 		if (MainDropVol < 0)
