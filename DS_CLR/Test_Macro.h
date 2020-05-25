@@ -14,7 +14,7 @@
 
 // Enable Helper Function Tests
 // Enable all tests selected
-#define TEST_ENABLE					!UI_INPUT_ERROR_CHECK
+#define TEST_ENABLE					(!UI_INPUT_ERROR_CHECK)
 // Select tests to enable below
 #define TEST_OCV					0
 #define TEST_LIST_FILES				0

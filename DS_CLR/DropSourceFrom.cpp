@@ -690,10 +690,14 @@ void DSCLR::DropSourceFrom::CalculateMainDropVol()
 	float del_V;
 	float del_V_temp;
 
+	int MDCountPx;
+
 	for (int i = 0; i < this->GrayscaleImages->size(); i++)
 	{
 		pb_str = "Drop Volume: " + i + "/" + GrayscaleImages->size();
 		MainDropVol = -1;
+
+		MDCountPx = 0;
 
 		if (this->MainDropPoints->at(i).y >= 0)
 		{
@@ -705,7 +709,10 @@ void DSCLR::DropSourceFrom::CalculateMainDropVol()
 				tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
 			}
 			MainDropImg = ImageProcessing::MainDropMask(tmp, this->ThreshType);
+			
 			MainDropVol = ImageProcessing::MainDropVolume(MainDropImg, ROI_Width, ROI_Height, UA_info, &del_V_temp);
+
+
 			del_V = del_V_temp;
 		}
 

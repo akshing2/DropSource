@@ -648,6 +648,8 @@ float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, fl
 
 	bool init_reset_flag = true;
 
+	
+
 	// itterate row by row
 	for (int row = 0; row < main_drop_img.rows; row++)
 	{
@@ -684,6 +686,7 @@ float ImageProcessing::MainDropVolume(cv::Mat main_drop_img, float img_width, fl
 		// finally, the error in volume
 		del_V = (Cv_hi + Cv_lo)/2;
 	}
+
 
 	*ret_del_v = del_V;
 	return TotalVol;
