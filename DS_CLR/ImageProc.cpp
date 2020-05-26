@@ -112,6 +112,61 @@ cv::Mat ImageProcessing::CannyEdgeDetect(cv::Mat grayscale_img, int HighThresh, 
 	return dest;
 }
 
+std::tuple<cv::Point2f, cv::Point2f> ImageProcessing::TopAndBotOfMainDrop(cv::Mat grayscale_img)
+{
+	std::tuple<cv::Point2f, cv::Point2f> ExtPoints;
+	cv::Point2f Bottom;
+	cv::Point2f Top;
+
+	// parameters for sub pixel edge detection
+	double alpha = 0.5;
+	int low = 0;
+	int high = 127;
+	std::vector<Contour> contours;		// vector of Contour structs from EdgesSubPix.h
+	std::vector<cv::Vec4i> heirarchy;
+	int mode = cv::RETR_TREE;			// same mode used in finding main drop points
+
+	// perform sub pixel edge detection
+	EdgesSubPix(grayscale_img, alpha, low, high, contours, heirarchy, mode);
+
+	// now loop through the first contour (main drop) to find extreme points
+	// for top most point, it is the point with min Y value
+	// for bottom most point, it is the point with max Y value
+	float Ytop_cmp = grayscale_img.size().height;	// start with max value to find min
+	float Ybot_cmp = 0;								// start with min value to find max
+	float MaxY = Ybot_cmp;
+	float MinY = Ytop_cmp;
+	if (contours.size() > 0)
+	{
+		for (int i = 0; i < contours.at(0).points.size(); i++)
+		{
+			Ytop_cmp = contours.at(0).points.at(i).y;
+			Ybot_cmp = Ytop_cmp;						// we're comparing the same Y values
+			// check for top most point
+			if (Ytop_cmp < MinY)
+			{
+				MinY = Ytop_cmp;
+				Top = contours.at(0).points.at(i);
+			}
+			// check for bottom most point
+			if (Ybot_cmp > MaxY)
+			{
+				MaxY = Ybot_cmp;
+				Bottom = contours.at(0).points.at(i);
+			}
+		}
+	}
+	else {
+		Top.x = -1;
+		Top.y = -1;
+		Bottom = Top;
+	}
+	
+	// add points to return tuple
+	ExtPoints = std::make_tuple(Top, Bottom);
+	return ExtPoints;
+}
+
 std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
 {
 	//std::vector<cv::Point2f> centers;
@@ -384,7 +439,6 @@ cv::Point2f ImageProcessing::FindBottomMostPoint(cv::Mat grayscale_img, int thre
 			});
 	}
 
-	
 	bottom.x = float(extBot.x);
 	bottom.y = float(extBot.y);
 
@@ -438,11 +492,16 @@ std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::
 {
 	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPts;
 
+	// using sub pixel edge detection to get top and bottom of main drop
+	std::tuple<cv::Point2f, cv::Point2f> TopAndBot = TopAndBotOfMainDrop(grayscale_img);
+
 	// 1. find main drop position
 	cv::Point2f MainDropPos = FindMainDropPos(grayscale_img, thresh_type);
 
 	// 2. find extreme bottom
-	cv::Point2f bxy = FindBottomMostPoint(grayscale_img, thresh_type);
+	//cv::Point2f bxy = FindBottomMostPoint(grayscale_img, thresh_type);
+	// trying with new method
+	cv::Point2f bxy = std::get<1>(TopAndBot);
 
 	// 3. find radius of head
 	float HeadRadius = Distance2Points(MainDropPos, bxy);
@@ -455,8 +514,10 @@ std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::
 	p1.y = p1.y - HeadRadius;
 
 	// 6. find tail end of ligament, p2
-	cv::Point2f p2 = MainDropPos;
-	p2.y = p2.y + HeadRadius - Rect.height;
+	/*cv::Point2f p2 = MainDropPos;
+	p2.y = p2.y + HeadRadius - Rect.height;*/
+	// let's find the tail end of the ligament using the new method
+	cv::Point2f p2 = std::get<0>(TopAndBot);
 
 	LigLenPts = std::make_tuple(MainDropPos, bxy, p1, p2);
 
@@ -886,9 +947,22 @@ cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorI
 	cv::Scalar white = cv::Scalar(255, 255, 255);
 	int thickness = 4;
 	cv::Mat drawing;
-	if (LigPts.size() > 0)
+	/*if (LigPts.size() > 0)
 	{
 		drawing = DrawLine2Points(ColorImg, LigPts, white, thickness);
+	}
+	else {
+		drawing = ColorImg.clone();
+	}*/
+
+	//// do different method
+	//// get tuple of lig points
+	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts = LigLenPoints(GrayscaleImg, thresh_type);
+	// make vector of bottom and top most points
+	std::vector<cv::Point2f> ll{ std::get<2>(ll_pts), std::get<3>(ll_pts) };
+	if (LigPts.size() > 0)
+	{
+		drawing = DrawLine2Points(ColorImg, ll, white, thickness);
 	}
 	else {
 		drawing = ColorImg.clone();
@@ -901,7 +975,17 @@ cv::Mat ImageProcessing::DrawMainDropVolume(cv::Mat GrayscaleImg, cv::Mat ColorI
 {
 	cv::Mat drawing = ColorImg.clone();
 
-	cv::Mat MDMask = MainDropMask(GrayscaleImg, thresh_type);
+	// canny edge detector params
+	// may need to change if changed in MainDropVol
+	int LowThresh = 127;
+	int HighThresh = 255;
+	int edgeThresh = 1;
+	int kernal_size = 3;
+
+	// will draw all drops not just main one
+	cv::Mat MDMask = CannyEdgeDetect(GrayscaleImg, HighThresh, LowThresh, edgeThresh, kernal_size);
+
+	//cv::Mat MDMask = MainDropMask(GrayscaleImg, thresh_type);
 	std::vector<std::vector<cv::Point>> Contours;
 	std::vector<cv::Vec4i> Heirarchy;
 	cv::Scalar green = cv::Scalar(0, 255, 0);

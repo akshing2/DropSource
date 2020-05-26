@@ -62,6 +62,9 @@ namespace ImageProcessing
 	cv::Mat GrayImageSubtraction(cv::Mat ref_img, cv::Mat src_img);
 	// Canny edge detection operation. Provides a binary image of detected edges
 	cv::Mat CannyEdgeDetect(cv::Mat grayscale_img, int HighThresh, int LowThresh, int edgeThresh, int kernel_size);
+	// function to find the top most and bottom most extreme points on the main drop using subpixel edge detection method
+	// 0-> Top Point, 1-> Bottom Point
+	std::tuple<cv::Point2f, cv::Point2f> TopAndBotOfMainDrop(cv::Mat grayscale_img);
 
 	// MAIN DROP POSITIONS ####################################################################################
 	// returns a vector of mass centers for a single image
