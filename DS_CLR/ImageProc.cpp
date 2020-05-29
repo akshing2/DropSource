@@ -129,6 +129,13 @@ std::tuple<cv::Point2f, cv::Point2f> ImageProcessing::TopAndBotOfMainDrop(cv::Ma
 	// perform sub pixel edge detection
 	EdgesSubPix(grayscale_img, alpha, low, high, contours, heirarchy, mode);
 
+	// let's see if the points we get are what we want
+	cv::Mat subpixedge = DrawSubPixEdge(grayscale_img, contours);
+	cv::imshow("Gray", grayscale_img);
+	cv::imshow("subpixedge", subpixedge);
+	cv::waitKey(0);
+	cv::destroyAllWindows();
+
 	// now loop through the first contour (main drop) to find extreme points
 	// for top most point, it is the point with min Y value
 	// for bottom most point, it is the point with max Y value
@@ -165,6 +172,89 @@ std::tuple<cv::Point2f, cv::Point2f> ImageProcessing::TopAndBotOfMainDrop(cv::Ma
 	// add points to return tuple
 	ExtPoints = std::make_tuple(Top, Bottom);
 	return ExtPoints;
+}
+
+std::tuple<cv::Point2f, cv::Point2f> ImageProcessing::LeftAndRighOfMainDrop(cv::Mat grayscale_img)
+{
+	std::tuple<cv::Point2f, cv::Point2f> ExtPoints;
+	cv::Point2f Right;
+	cv::Point2f Left;
+
+	// parameters for sub pixel edge detection
+	double alpha = 0.5;
+	int low = 0;
+	int high = 127;
+	std::vector<Contour> contours;		// vector of Contour structs from EdgesSubPix.h
+	std::vector<cv::Vec4i> heirarchy;
+	int mode = cv::RETR_TREE;			// same mode used in finding main drop points
+
+	// perform sub pixel edge detection
+	EdgesSubPix(grayscale_img, alpha, low, high, contours, heirarchy, mode);
+
+	// now loop through the first contour (main drop) to find extreme points
+	// for Left most point, it is the point with min X value
+	// for Right most point, it is the point with max X value
+	float Xleft_cmp = grayscale_img.size().height;		// start with max value to find min
+	float Xright_cmp = 0;								// start with min value to find max
+	float MaxX = Xright_cmp;
+	float MinX = Xleft_cmp;
+	if (contours.size() > 0)
+	{
+		for (int i = 0; i < contours.at(0).points.size(); i++)
+		{
+			Xright_cmp = contours.at(0).points.at(i).x;
+			Xleft_cmp = Xright_cmp;						// we're comparing the same X values
+			// check for left most point
+			if (Xleft_cmp < MinX)
+			{
+				MinX = Xleft_cmp;
+				Left = contours.at(0).points.at(i);
+			}
+			// check for right most point
+			if (Xright_cmp > MaxX)
+			{
+				MaxX = Xright_cmp;
+				Right = contours.at(0).points.at(i);
+			}
+		}
+	}
+	else {
+		Left.x = -1;
+		Left.y = -1;
+		Right = Left;
+	}
+
+	// add points to return tuple
+	ExtPoints = std::make_tuple(Left, Right);
+	return ExtPoints;
+}
+
+bool ImageProcessing::isMainDropLong(cv::Mat grayscale_img)
+{
+	bool isLong = false;	// assume false until proven true
+	
+	// get the extreme points of the main drop
+	std::tuple<cv::Point2f, cv::Point2f> TopAndBot = TopAndBotOfMainDrop(grayscale_img);
+	cv::Point2f Top = std::get<0>(TopAndBot);
+	cv::Point2f Bot = std::get<1>(TopAndBot);
+	std::tuple<cv::Point2f, cv::Point2f> LftAndRht = LeftAndRighOfMainDrop(grayscale_img);
+	cv::Point2f Left = std::get<0>(LftAndRht);
+	cv::Point2f Right = std::get<1>(LftAndRht);
+
+	// get vertical distance
+	float vert_dist = Distance2Points(Top, Bot);
+	// get horizontal distance
+	float horz_dist = Distance2Points(Left, Right);
+
+	// if Horizontal distance is less than some max threshold, 
+	float dist_cmp = 0.5;
+	if ((horz_dist <= (1.0 + dist_cmp) * vert_dist))
+	{
+		// roughly circular
+		isLong = true;
+	}
+
+	return isLong;
 }
 
 std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
@@ -342,9 +432,8 @@ cv::Point2f ImageProcessing::CorrectCentroid(cv::Mat grayscale_img, int thresh_t
 	cv::Point2f Corrected = detected_cent;
 	// TODO: will give wrong correction when only ligament present on screen
 	// (worth fixing? Usually ligament breaks up before drop leave ROI)
-	// see if a ligament is present. Usually height is much bigger than the 
-	cv::Rect2f Rect = FindMainDropRect(grayscale_img, thresh_type);
-	if (Rect.height > HEIGHT_WIDTH_CMP* Rect.width)
+	// see if a ligament is present. Usually height is much bigger than the width
+	if (isMainDropLong(grayscale_img))
 	{
 		// ligament exists, so correct it
 		// first find the bottom most point
@@ -885,7 +974,8 @@ float ImageProcessing::SubPixelVolume(cv::Mat grayscale_img, cv::Mat color_img, 
 
 cv::Mat ImageProcessing::DrawSubPixEdge(cv::Mat gray_img, std::vector<Contour> EdgeContours)
 {
-	cv::Mat drawing = gray_img.clone();
+	cv::Mat drawing;
+	cv::cvtColor(gray_img, drawing, cv::COLOR_GRAY2RGB);
 
 	int radius = 1;
 	cv::Scalar green(0, 255, 0);

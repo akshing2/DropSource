@@ -65,6 +65,12 @@ namespace ImageProcessing
 	// function to find the top most and bottom most extreme points on the main drop using subpixel edge detection method
 	// 0-> Top Point, 1-> Bottom Point
 	std::tuple<cv::Point2f, cv::Point2f> TopAndBotOfMainDrop(cv::Mat grayscale_img);
+	// function to get the left most and right most extreme points on main drop using sub pixel edge detection
+	// 0-> Left, 1-> Right
+	std::tuple<cv::Point2f, cv::Point2f> LeftAndRighOfMainDrop(cv::Mat grayscale_img);
+	// function to check for existance of ligament 
+	// determined using sub pixel edge detection
+	bool isMainDropLong(cv::Mat grayscale_img);
 
 	// MAIN DROP POSITIONS ####################################################################################
 	// returns a vector of mass centers for a single image
