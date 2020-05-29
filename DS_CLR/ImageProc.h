@@ -79,6 +79,8 @@ namespace ImageProcessing
 	// Draw Contours
 	// Returns processed image, which is a frame of the high speed video
 	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites, bool NoiseReduction);
+	// Function to shift the centroid if a ligament is detected
+	cv::Point2f CorrectCentroid(cv::Mat grayscale_img, int thresh_type, cv::Point2f detected_cent);
 
 	// LIGAMENT LENGTH ########################################################################################
 	// Find Bounding Rectangle

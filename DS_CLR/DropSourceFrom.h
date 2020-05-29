@@ -10,15 +10,12 @@
 *
 *	AUTHOR:		Akshin Goswami
 *	DATE:		28/01/20
-*	VERSION:	0.2.0
+*	VERSION:	0.3.0
 *
 *
 *	TODO:
-*	1. Uncertainty Analysis in Time Vector
-*	2. Uncertainty Analysis in Position Vector
-*	3. Uncertainty Analysis in Velocity Vector
-*	4. Uncertainty Analysis in Ligament Length Vector
-*	5. Uncertainty Analysis in Volume Vector
+*	1. Bug in terms of ligament only present in ROI heavily distorts centroid position
+*	2. As main drop leaves ROI, centroid is pushed up
 */
 
 #pragma once

@@ -374,11 +374,11 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 	for (std::vector<cv::Mat>::iterator it = this->GrayscaleImages->begin(); it != this->GrayscaleImages->end(); ++it)
 	{
 		tmp = *it;
-		if (this->ImgSubEn_cbox->Checked)
-		{
-			// subtract images
-			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
-		}
+		//if (this->ImgSubEn_cbox->Checked)
+		//{
+		//	// subtract images
+		//	tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
+		//}
 
 		// If UA is checked, make sure to find del_dx and del_dy
 		if (this->UA_Enable_cbox->Checked)
@@ -428,7 +428,9 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		{
 			// main drop detected
 			detected_centroid = ImageProcessing::MaxImageCentroid(Centers);
-			// predictionb calculated based off previous detected centers
+			// do some correction if ligament is detected
+			detected_centroid = ImageProcessing::CorrectCentroid(tmp, this->ThreshType, detected_centroid);
+			// prediction calculated based off previous detected centers
 			predicted_centroid = PredictNextMainDropPosition(detected_centroid, i);
 			// Control between detected and predicted
 			// This is saved as a percentage error
@@ -451,6 +453,8 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		if (detected_centroid.y != -1)
 		{
 			center_mm_y = Pixels2mm(detected_centroid.y, false);
+
+
 			// if uncertainty analysis enabled, find error
 			if (this->UA_Enable_cbox->Checked)
 			{

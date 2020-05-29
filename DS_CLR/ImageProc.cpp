@@ -337,6 +337,30 @@ cv::Mat ImageProcessing::DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool In
 	return cont_img;
 }
 
+cv::Point2f ImageProcessing::CorrectCentroid(cv::Mat grayscale_img, int thresh_type, cv::Point2f detected_cent)
+{
+	cv::Point2f Corrected = detected_cent;
+	// TODO: will give wrong correction when only ligament present on screen
+	// (worth fixing? Usually ligament breaks up before drop leave ROI)
+	// see if a ligament is present. Usually height is much bigger than the 
+	cv::Rect2f Rect = FindMainDropRect(grayscale_img, thresh_type);
+	if (Rect.height > HEIGHT_WIDTH_CMP* Rect.width)
+	{
+		// ligament exists, so correct it
+		// first find the bottom most point
+		std::tuple<cv::Point2f, cv::Point2f> TopAndBot = TopAndBotOfMainDrop(grayscale_img);
+		cv::Point2f bot = std::get<1>(TopAndBot);		// done through sub pixel edge detection
+
+		// next get the distance between the supposed center and bottom most point
+		float dist = Distance2Points(detected_cent, bot);
+
+		// now shift the corrected center to 0.5*dist downward
+		Corrected.y = Corrected.y + 0.5 * dist;
+	}
+
+	return Corrected;
+}
+
 std::vector<cv::Rect2f> ImageProcessing::FindBoundingRects(cv::Mat grayscale_img, int thresh_type)
 {
 	std::vector<cv::Rect2f> BoundRects;
@@ -497,6 +521,8 @@ std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::
 
 	// 1. find main drop position
 	cv::Point2f MainDropPos = FindMainDropPos(grayscale_img, thresh_type);
+	// 1 a) correct main drop position
+	MainDropPos = CorrectCentroid(grayscale_img, thresh_type, MainDropPos);
 
 	// 2. find extreme bottom
 	//cv::Point2f bxy = FindBottomMostPoint(grayscale_img, thresh_type);
