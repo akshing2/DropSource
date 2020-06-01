@@ -130,11 +130,11 @@ std::tuple<cv::Point2f, cv::Point2f> ImageProcessing::TopAndBotOfMainDrop(cv::Ma
 	EdgesSubPix(grayscale_img, alpha, low, high, contours, heirarchy, mode);
 
 	// let's see if the points we get are what we want
-	cv::Mat subpixedge = DrawSubPixEdge(grayscale_img, contours);
+	/*cv::Mat subpixedge = DrawSubPixEdge(grayscale_img, contours);
 	cv::imshow("Gray", grayscale_img);
 	cv::imshow("subpixedge", subpixedge);
 	cv::waitKey(0);
-	cv::destroyAllWindows();
+	cv::destroyAllWindows();*/
 
 	// now loop through the first contour (main drop) to find extreme points
 	// for top most point, it is the point with min Y value
@@ -250,7 +250,7 @@ bool ImageProcessing::isMainDropLong(cv::Mat grayscale_img)
 	float dist_cmp = 0.5;
 	if ((horz_dist <= (1.0 + dist_cmp) * vert_dist))
 	{
-		// roughly circular
+		// roughly long
 		isLong = true;
 	}
 

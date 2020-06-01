@@ -367,13 +367,15 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 	int MaxDropsOnScreen = 0;
 
 	System::String^ pb_str = "Detecting Main Drop Positions";
-	ProgressBarUpdate(pb_str, 0, 100, 0, true);
+	int MaxProg = this->GrayscaleImages->size();
+	ProgressBarUpdate(pb_str, 0, MaxProg, 0, true);
 
 	// Loop through grayscale images
-	int i = 0;
-	for (std::vector<cv::Mat>::iterator it = this->GrayscaleImages->begin(); it != this->GrayscaleImages->end(); ++it)
+	
+	for (int i = 0; i < this->GrayscaleImages->size(); i++)
 	{
-		tmp = *it;
+		
+		tmp = this->GrayscaleImages->at(i);
 		if (this->ImgSubEn_cbox->Checked)
 		{
 			// subtract images
@@ -384,9 +386,9 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		if (this->UA_Enable_cbox->Checked)
 		{
 			// get conversion factor, dy itself
-			dy = this->ROI_H / (it->size().height);
+			dy = this->ROI_H / (tmp.size().height);
 			// get error in conversion factors
-			del_dx_dy = UA_Images::get_del_dx_dy(*it, this->ROI_W, this->ROI_H, this->del_IMG_W, this->del_IMG_H, this->del_ROI_W, this->del_ROI_H);
+			del_dx_dy = UA_Images::get_del_dx_dy(tmp, this->ROI_W, this->ROI_H, this->del_IMG_W, this->del_IMG_H, this->del_ROI_W, this->del_ROI_H);
 			this->del_dx = std::get<0>(del_dx_dy);
 			this->del_dy = std::get<1>(del_dx_dy);
 		}
@@ -394,6 +396,11 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
 		pb_str = "Main Drop Pos: " + i + "/" + GrayscaleImages->size();
+
+		if (Centers.size() > 0)
+		{
+			del_dx = -1;
+		}
 
 		// check if number of drops on screen has changed
 		if (Centers.size() != MaxDropsOnScreen)
@@ -411,11 +418,12 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 		{
 			// just started main drop or continuing main drop
 			isMainDrop = true;
-		} else
+		}
+		else
 		{
 			isMainDrop = false;
 		}
-		
+
 		if (!isMainDrop)
 		{
 			// main drop not found
@@ -424,18 +432,23 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 			control_centroid = detected_centroid;
 			predicted_centroid.x = -1;
 			predicted_centroid.y = -1;
-		} else 
+		}
+		else
 		{
 			// main drop detected
 			detected_centroid = ImageProcessing::FindMainDropPos(tmp, this->ThreshType);
-			// do some correction if ligament is detected
-			detected_centroid = ImageProcessing::CorrectCentroid(tmp, this->ThreshType, detected_centroid);
+			if (this->CentroidCorrect_cbox->Checked)
+			{
+				// do some correction if ligament is detected
+				detected_centroid = ImageProcessing::CorrectCentroid(tmp, this->ThreshType, detected_centroid);
+			}
+
 			// prediction calculated based off previous detected centers
-			predicted_centroid = PredictNextMainDropPosition(detected_centroid, i);
+			//predicted_centroid = PredictNextMainDropPosition(detected_centroid, i);
 			// Control between detected and predicted
 			// This is saved as a percentage error
-			control_centroid.x = abs((detected_centroid.x - predicted_centroid.x) / detected_centroid.x);
-			control_centroid.y = abs((detected_centroid.y - predicted_centroid.y) / detected_centroid.y);
+			//control_centroid.x = abs((detected_centroid.x - predicted_centroid.x) / detected_centroid.x);
+			//control_centroid.y = abs((detected_centroid.y - predicted_centroid.y) / detected_centroid.y);
 
 			if (predicted_centroid.y > this->ImageHeight_Px)
 			{
@@ -444,10 +457,10 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 				endMainDrop = true;
 			}
 		}
-		
+
 		this->MainDropPoints->push_back(detected_centroid);
-		this->MainDropPredic->push_back(predicted_centroid);
-		this->MainDropControl->push_back(control_centroid);
+		/*this->MainDropPredic->push_back(predicted_centroid);
+		this->MainDropControl->push_back(control_centroid);*/
 
 		// Save position in mm
 		if (detected_centroid.y != -1)
@@ -466,12 +479,11 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 			center_mm_y = -1;
 			del_rmm = -1;
 		}
-		
+
 		this->MainDropPosition->push_back(center_mm_y);
 		this->UA_MainDropPosition->push_back(del_rmm);
 
 		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
-		i++;
 	}
 	
 	pb_str = "Finished";
@@ -572,6 +584,11 @@ void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 		if (this->ImgSubEn_cbox->Checked)
 		{
 			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
+		}
+
+		if (i >= 124)
+		{
+			int blah = -1;
 		}
 
 		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);

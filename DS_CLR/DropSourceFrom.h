@@ -261,6 +261,7 @@ private: System::Windows::Forms::TextBox^ UA_ROI_Height_txt;
 private: System::Windows::Forms::Label^ UA_ROI_Width_lbl;
 private: System::Windows::Forms::Label^ UA_ROI_Height_lbl;
 private: System::Windows::Forms::Label^ Error_UA;
+private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
 
 
 	protected:
@@ -335,6 +336,7 @@ private: System::Windows::Forms::Label^ Error_UA;
 			this->UA_ROI_Width_lbl = (gcnew System::Windows::Forms::Label());
 			this->UA_ROI_Height_lbl = (gcnew System::Windows::Forms::Label());
 			this->Error_UA = (gcnew System::Windows::Forms::Label());
+			this->CentroidCorrect_cbox = (gcnew System::Windows::Forms::CheckBox());
 			this->ThreshGroupBox->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -852,7 +854,7 @@ private: System::Windows::Forms::Label^ Error_UA;
 			this->ImgSubEn_cbox->AutoSize = true;
 			this->ImgSubEn_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->ImgSubEn_cbox->Location = System::Drawing::Point(475, 609);
+			this->ImgSubEn_cbox->Location = System::Drawing::Point(474, 582);
 			this->ImgSubEn_cbox->Name = L"ImgSubEn_cbox";
 			this->ImgSubEn_cbox->Size = System::Drawing::Size(234, 29);
 			this->ImgSubEn_cbox->TabIndex = 43;
@@ -972,12 +974,25 @@ private: System::Windows::Forms::Label^ Error_UA;
 			this->Error_UA->Text = L"Numerical Values Only";
 			this->Error_UA->Visible = false;
 			// 
+			// CentroidCorrect_cbox
+			// 
+			this->CentroidCorrect_cbox->AutoSize = true;
+			this->CentroidCorrect_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(0)));
+			this->CentroidCorrect_cbox->Location = System::Drawing::Point(470, 617);
+			this->CentroidCorrect_cbox->Name = L"CentroidCorrect_cbox";
+			this->CentroidCorrect_cbox->Size = System::Drawing::Size(245, 29);
+			this->CentroidCorrect_cbox->TabIndex = 56;
+			this->CentroidCorrect_cbox->Text = L"Enable Centroid Correction";
+			this->CentroidCorrect_cbox->UseVisualStyleBackColor = true;
+			// 
 			// DropSourceFrom
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->BackColor = System::Drawing::SystemColors::Control;
 			this->ClientSize = System::Drawing::Size(892, 861);
+			this->Controls->Add(this->CentroidCorrect_cbox);
 			this->Controls->Add(this->Error_UA);
 			this->Controls->Add(this->UA_ROI_Height_lbl);
 			this->Controls->Add(this->UA_ROI_Width_lbl);
