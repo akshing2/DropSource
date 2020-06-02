@@ -639,13 +639,13 @@ std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::
 	return LigLenPts;
 }
 
-float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img, int thresh_type)
+float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img, int thresh_type, cv::Point2f MainDropPoint)
 {
 	float LigLength = -1;
 	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPts = LigLenPoints(grayscale_img, thresh_type);
 
 	// 1. find main drop position
-	cv::Point2f pos = std::get<0>(LigLenPts);
+	cv::Point2f pos = MainDropPoint;
 
 	// 2. find extreme bottom
 	cv::Point2f ExtBot = std::get<1>(LigLenPts);

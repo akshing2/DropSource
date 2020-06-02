@@ -854,7 +854,7 @@ private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
 			this->ImgSubEn_cbox->AutoSize = true;
 			this->ImgSubEn_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->ImgSubEn_cbox->Location = System::Drawing::Point(474, 582);
+			this->ImgSubEn_cbox->Location = System::Drawing::Point(470, 582);
 			this->ImgSubEn_cbox->Name = L"ImgSubEn_cbox";
 			this->ImgSubEn_cbox->Size = System::Drawing::Size(234, 29);
 			this->ImgSubEn_cbox->TabIndex = 43;

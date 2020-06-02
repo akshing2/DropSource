@@ -538,9 +538,14 @@ void DSCLR::DropSourceFrom::MainDropVelocities()
 				// calculate uncertainty in velocity if checkbox checked
 				if (this->UA_Enable_cbox->Checked)
 				{
+					// change in position 
 					delta_r = Pixels2mm((MainDropPoints->at(i).y - MainDropPoints->at(i - 1).y), false);	// mm
-					del_rmm_i = this->UA_MainDropPosition->at(i);											// mm
-					del_tms_i = this->UA_TimeVector->at(i);													// ms
+					// uncertainty in change in position
+					// get sum of two uncertainties at i and i-1
+					del_rmm_i = (this->UA_MainDropPosition->at(i) + this->UA_MainDropPosition->at(i-1));	// mm
+					// uncertainty in change of time, which is proporitonally similar
+					// to the uncertainty in camera frame rate
+					del_tms_i = this->del_CFR/this->CFR*delta_t;				// ms
 					v0_i = delta_r / delta_t;																// m/s
 
 					del_v = UA_Velocity::get_del_v(v0_i, delta_r, delta_t, del_rmm_i, del_tms_i);
@@ -662,7 +667,7 @@ void DSCLR::DropSourceFrom::CalculateLigLength()
 		if (this->MainDropPoints->at(i).y >= 0)
 		{
 			// main drop exists
-			LigLen = ImageProcessing::LengthOfLigament(tmp, this->ThreshType);
+			LigLen = ImageProcessing::LengthOfLigament(tmp, this->ThreshType, this->MainDropPoints->at(i));
 
 			// if UA is checked
 			if (this->UA_Enable_cbox->Checked)

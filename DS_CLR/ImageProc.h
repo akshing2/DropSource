@@ -107,7 +107,7 @@ namespace ImageProcessing
 	// 0->MainHeadPos, 1->bottommost position, 2->p1, 3->p2
 	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPoints(cv::Mat grayscale_img, int thresh_type);
 	// Calculate length of ligament in picture
-	float LengthOfLigament(cv::Mat grayscale_img, int thresh_type);
+	float LengthOfLigament(cv::Mat grayscale_img, int thresh_type, cv::Point2f MainDropPoint);
 	
 	// DROPLET VOLUME #########################################################################################
 	// Find the maximum area of a contour
