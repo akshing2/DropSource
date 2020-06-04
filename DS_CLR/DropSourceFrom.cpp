@@ -365,6 +365,8 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 	cv::Mat tmp;
 
 	int MaxDropsOnScreen = 0;
+	double MaxContourArea = 0;
+	double CurrContourArea = 0;
 
 	System::String^ pb_str = "Detecting Main Drop Positions";
 	int MaxProg = this->GrayscaleImages->size();
@@ -395,12 +397,27 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 
 		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
+
+		// show pictures if a center is detected
+		bool debug = false;
+		if (Centers.size() > 0 && debug)
+		{
+			cv::imshow("Gray Img", this->GrayscaleImages->at(i));
+			cv::imshow("Subtracted Img", tmp);
+			cv::imshow("Binary Img", bin_img);
+			cv::waitKey(0);
+			cv::destroyAllWindows();
+		}
+
 		pb_str = "Main Drop Pos: " + i + "/" + GrayscaleImages->size();
 
-		if (Centers.size() > 0)
+		// updating Max contour area found
+		CurrContourArea = ImageProcessing::FindMaxContourArea(this->GrayscaleImages->at(i), this->ThreshType);
+		if (CurrContourArea > MaxContourArea)
 		{
-			del_dx = -1;
+			MaxContourArea = CurrContourArea;
 		}
+
 
 		// check if number of drops on screen has changed
 		if (Centers.size() != MaxDropsOnScreen)
@@ -409,8 +426,12 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 			// if  it has decreased or increased
 			if (Centers.size() > MaxDropsOnScreen) MaxDropsOnScreen = Centers.size();
 
-			// if decreased, then we can assume main drop has left ROI
-			if (Centers.size() < MaxDropsOnScreen) endMainDrop = true;
+			// if decreased, then we need to check if satellites have merged into
+			// the main drop or if main drop has left
+			if (Centers.size() < MaxDropsOnScreen)
+			{
+				if (CurrContourArea < 0.1*MaxContourArea) endMainDrop = true;
+			}
 		}
 
 		// determine if main drop is on screen
@@ -449,13 +470,6 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 			// This is saved as a percentage error
 			//control_centroid.x = abs((detected_centroid.x - predicted_centroid.x) / detected_centroid.x);
 			//control_centroid.y = abs((detected_centroid.y - predicted_centroid.y) / detected_centroid.y);
-
-			if (predicted_centroid.y > this->ImageHeight_Px)
-			{
-				// main drop has gone off screen
-				isMainDrop = false;
-				endMainDrop = true;
-			}
 		}
 
 		this->MainDropPoints->push_back(detected_centroid);

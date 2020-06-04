@@ -67,9 +67,13 @@ namespace DSCLR {
 			{
 				ThreshType = THRESH_ADAPTIVE;
 			}
+			else if (this->CannyEdge_Rdibtn->Checked)
+			{
+				ThreshType = THRESH_CANNY_EDGE;
+			}
 			else
 			{
-				ThreshType = -1;
+				ThreshType = THRESH_UNDEFINED;
 			}
 
 			// Initialise images
@@ -262,6 +266,7 @@ private: System::Windows::Forms::Label^ UA_ROI_Width_lbl;
 private: System::Windows::Forms::Label^ UA_ROI_Height_lbl;
 private: System::Windows::Forms::Label^ Error_UA;
 private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
+private: System::Windows::Forms::RadioButton^ CannyEdge_Rdibtn;
 
 
 	protected:
@@ -337,6 +342,7 @@ private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
 			this->UA_ROI_Height_lbl = (gcnew System::Windows::Forms::Label());
 			this->Error_UA = (gcnew System::Windows::Forms::Label());
 			this->CentroidCorrect_cbox = (gcnew System::Windows::Forms::CheckBox());
+			this->CannyEdge_Rdibtn = (gcnew System::Windows::Forms::RadioButton());
 			this->ThreshGroupBox->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -805,7 +811,7 @@ private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
 			this->ImageProcessing_lbl->AutoSize = true;
 			this->ImageProcessing_lbl->Font = (gcnew System::Drawing::Font(L"Arial", 18, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->ImageProcessing_lbl->Location = System::Drawing::Point(14, 582);
+			this->ImageProcessing_lbl->Location = System::Drawing::Point(14, 564);
 			this->ImageProcessing_lbl->Name = L"ImageProcessing_lbl";
 			this->ImageProcessing_lbl->Size = System::Drawing::Size(161, 27);
 			this->ImageProcessing_lbl->TabIndex = 41;
@@ -813,13 +819,14 @@ private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
 			// 
 			// ThreshGroupBox
 			// 
+			this->ThreshGroupBox->Controls->Add(this->CannyEdge_Rdibtn);
 			this->ThreshGroupBox->Controls->Add(this->AdaptiveThresh_RdBtn);
 			this->ThreshGroupBox->Controls->Add(this->GlobalThresh_RdBtn);
 			this->ThreshGroupBox->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 9.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->ThreshGroupBox->Location = System::Drawing::Point(238, 582);
+			this->ThreshGroupBox->Location = System::Drawing::Point(238, 564);
 			this->ThreshGroupBox->Name = L"ThreshGroupBox";
-			this->ThreshGroupBox->Size = System::Drawing::Size(190, 109);
+			this->ThreshGroupBox->Size = System::Drawing::Size(190, 114);
 			this->ThreshGroupBox->TabIndex = 42;
 			this->ThreshGroupBox->TabStop = false;
 			this->ThreshGroupBox->Text = L"Binary Thresholding Method";
@@ -827,7 +834,7 @@ private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
 			// AdaptiveThresh_RdBtn
 			// 
 			this->AdaptiveThresh_RdBtn->AutoSize = true;
-			this->AdaptiveThresh_RdBtn->Location = System::Drawing::Point(6, 69);
+			this->AdaptiveThresh_RdBtn->Location = System::Drawing::Point(3, 59);
 			this->AdaptiveThresh_RdBtn->Name = L"AdaptiveThresh_RdBtn";
 			this->AdaptiveThresh_RdBtn->Size = System::Drawing::Size(144, 20);
 			this->AdaptiveThresh_RdBtn->TabIndex = 1;
@@ -854,7 +861,7 @@ private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
 			this->ImgSubEn_cbox->AutoSize = true;
 			this->ImgSubEn_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->ImgSubEn_cbox->Location = System::Drawing::Point(470, 582);
+			this->ImgSubEn_cbox->Location = System::Drawing::Point(470, 564);
 			this->ImgSubEn_cbox->Name = L"ImgSubEn_cbox";
 			this->ImgSubEn_cbox->Size = System::Drawing::Size(234, 29);
 			this->ImgSubEn_cbox->TabIndex = 43;
@@ -979,12 +986,24 @@ private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
 			this->CentroidCorrect_cbox->AutoSize = true;
 			this->CentroidCorrect_cbox->Font = (gcnew System::Drawing::Font(L"Arial Narrow", 15.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
-			this->CentroidCorrect_cbox->Location = System::Drawing::Point(470, 617);
+			this->CentroidCorrect_cbox->Location = System::Drawing::Point(470, 599);
 			this->CentroidCorrect_cbox->Name = L"CentroidCorrect_cbox";
 			this->CentroidCorrect_cbox->Size = System::Drawing::Size(245, 29);
 			this->CentroidCorrect_cbox->TabIndex = 56;
 			this->CentroidCorrect_cbox->Text = L"Enable Centroid Correction";
 			this->CentroidCorrect_cbox->UseVisualStyleBackColor = true;
+			// 
+			// CannyEdge_Rdibtn
+			// 
+			this->CannyEdge_Rdibtn->AutoSize = true;
+			this->CannyEdge_Rdibtn->Location = System::Drawing::Point(6, 85);
+			this->CannyEdge_Rdibtn->Name = L"CannyEdge_Rdibtn";
+			this->CannyEdge_Rdibtn->Size = System::Drawing::Size(100, 20);
+			this->CannyEdge_Rdibtn->TabIndex = 2;
+			this->CannyEdge_Rdibtn->Text = L"Canny Edge";
+			this->CannyEdge_Rdibtn->TextImageRelation = System::Windows::Forms::TextImageRelation::ImageAboveText;
+			this->CannyEdge_Rdibtn->UseVisualStyleBackColor = true;
+			this->CannyEdge_Rdibtn->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::CannyEdge_Rdibtn_CheckedChanged);
 			// 
 			// DropSourceFrom
 			// 
@@ -1220,6 +1239,8 @@ private: System::Windows::Forms::CheckBox^ CentroidCorrect_cbox;
 	private: System::Void UA_CFR_txt_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 	}
 
+private: System::Void CannyEdge_Rdibtn_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
+}
 };
 }
 

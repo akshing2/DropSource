@@ -54,21 +54,30 @@ cv::Mat ImageProcessing::BinaryThresh(cv::Mat image, int thresh_type)
 	// initialise pre-processed image to return
 	cv::Mat pre_proc;
 
-	// Apply a Gausian linear filter on the image,
-	// This is to reduce the noise of the image.
-	// Parameters may need to be changed.
-	cv::GaussianBlur(image, pre_proc, cv::Size(5, 5), 0);
+	
 
 	// Conduct an adaptive threshold on the droplet.
 	// Parameters may need to be changed.
 	// https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html?highlight=adaptivethreshold
 	if (thresh_type == THRESH_ADAPTIVE)
 	{
+		// Apply a Gausian linear filter on the image,
+		// This is to reduce the noise of the image.
+		// Parameters may need to be changed.
+		cv::GaussianBlur(image, pre_proc, cv::Size(5, 5), 0);
 		cv::adaptiveThreshold(pre_proc, pre_proc, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 9, 2);
 	}
 	else if (thresh_type == THRESH_GLOBAL)
 	{
+		// Apply a Gausian linear filter on the image,
+		// This is to reduce the noise of the image.
+		// Parameters may need to be changed.
+		cv::GaussianBlur(image, pre_proc, cv::Size(5, 5), 0);
 		cv::threshold(pre_proc, pre_proc, 0, 255, cv::THRESH_BINARY);
+	}
+	else if (thresh_type == THRESH_CANNY_EDGE)
+	{
+		CannyEdgeDetect(image, DEF_HI_THRESH, DEF_LO_THRESH, DEF_EDGE_THRESH, DEF_KERNAL_SIZE);
 	}
 	
 
@@ -119,12 +128,12 @@ std::tuple<cv::Point2f, cv::Point2f> ImageProcessing::TopAndBotOfMainDrop(cv::Ma
 	cv::Point2f Top;
 
 	// parameters for sub pixel edge detection
-	double alpha = 0.5;
-	int low = 0;
-	int high = 127;
-	std::vector<Contour> contours;		// vector of Contour structs from EdgesSubPix.h
+	double alpha = DEF_ALPHA_SP;
+	int low = DEF_LO_SP;
+	int high = DEF_HI_SP;
+	std::vector<Contour> contours;			// vector of Contour structs from EdgesSubPix.h
 	std::vector<cv::Vec4i> heirarchy;
-	int mode = cv::RETR_TREE;			// same mode used in finding main drop points
+	int mode = DEF_MODE_SP;					// same mode used in finding main drop points
 
 	// perform sub pixel edge detection
 	EdgesSubPix(grayscale_img, alpha, low, high, contours, heirarchy, mode);
@@ -181,12 +190,12 @@ std::tuple<cv::Point2f, cv::Point2f> ImageProcessing::LeftAndRighOfMainDrop(cv::
 	cv::Point2f Left;
 
 	// parameters for sub pixel edge detection
-	double alpha = 0.5;
-	int low = 0;
-	int high = 127;
-	std::vector<Contour> contours;		// vector of Contour structs from EdgesSubPix.h
+	double alpha = DEF_ALPHA_SP;
+	int low = DEF_LO_SP;
+	int high = DEF_HI_SP;
+	std::vector<Contour> contours;			// vector of Contour structs from EdgesSubPix.h
 	std::vector<cv::Vec4i> heirarchy;
-	int mode = cv::RETR_TREE;			// same mode used in finding main drop points
+	int mode = DEF_MODE_SP;					// same mode used in finding main drop points
 
 	// perform sub pixel edge detection
 	EdgesSubPix(grayscale_img, alpha, low, high, contours, heirarchy, mode);
@@ -270,7 +279,8 @@ std::vector<cv::Point2f> ImageProcessing::ImageCentroids(cv::Mat binary_image)
 
 	// find contours
 	// Parameters found in python script
-	cv::findContours(binary_image, Contours, Heirarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE);
+	// Theory for findContours @ Suzuki, S. and Abe, K., Topological Structural Analysis of Digitized Binary Images by Border Following. CVGIP 30 1, pp 32-46.
+	cv::findContours(binary_image, Contours, Heirarchy, DEF_MODE_FC, DEF_METHOD_FC);
 
 	// Get moments
 	std::vector<cv::Moments> mu(Contours.size());
@@ -351,6 +361,9 @@ cv::Point2f ImageProcessing::FindMainDropPos(cv::Mat grayscale_img, int thresh_t
 	cv:Point2f pos;
 
 	cv::Mat bin_img = BinaryThresh(grayscale_img, thresh_type);
+
+	// try canny edge detection instead of binary thresh
+	//cv::Mat bin_img = ImageProcessing::CannyEdgeDetect(grayscale_img, DEF_HI_THRESH, DEF_LO_THRESH, DEF_EDGE_THRESH, DEF_KERNAL_SIZE);
 
 	std::vector<cv::Point2f> centers = ImageCentroids(bin_img);
 

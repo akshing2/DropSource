@@ -19,6 +19,7 @@
 #include "ThresholdingMethodsDefs.h"
 #include "UncertaintyAnalysis.h"
 #include "EdgesSubPix.h"
+#include "ImageProcessingParameters.h"
 
 #define MIN_SATELLITE_SIZE	10
 #define MAX_SATELLITE_SIZE	15
