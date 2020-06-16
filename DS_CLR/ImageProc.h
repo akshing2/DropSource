@@ -88,6 +88,8 @@ namespace ImageProcessing
 	cv::Mat DrawContours(cv::Mat bin_img, cv::Mat colr_img, bool IncludeSatellites, bool NoiseReduction);
 	// Function to shift the centroid if a ligament is detected
 	cv::Point2f CorrectCentroid(cv::Mat grayscale_img, int thresh_type, cv::Point2f detected_cent);
+	// function to group sufficiently close centers together
+	std::vector<cv::Point2f> CorrectCenters(std::vector<cv::Point2f> detected_centers);
 
 	// LIGAMENT LENGTH ########################################################################################
 	// Find Bounding Rectangle
@@ -139,7 +141,7 @@ namespace ImageProcessing
 	// Draw Main Drop centroid
 	cv::Mat DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, cv::Point2f MainDropPoint);
 	// Draw All Satellites
-	cv::Mat DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, float MainDropPos_mm);
+	cv::Mat DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, float MainDropPos_mm, std::vector<cv::Point2f> Centers);
 	// Draw Ligament Length
 	cv::Mat DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type);
 	// Draw Volume of Main Drop

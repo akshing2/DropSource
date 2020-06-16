@@ -463,6 +463,38 @@ cv::Point2f ImageProcessing::CorrectCentroid(cv::Mat grayscale_img, int thresh_t
 	return Corrected;
 }
 
+std::vector<cv::Point2f> ImageProcessing::CorrectCenters(std::vector<cv::Point2f> detected_centers)
+{
+	std::vector<cv::Point2f> corrected_centers;
+	cv::Point2f det_cent_i;
+	cv::Point2f cor_cent_j;
+
+	// push back first element if it exists
+	if (detected_centers.size() > 0) corrected_centers.push_back(detected_centers.at(0));
+
+	// loop through detected centers
+	for (int i = 0; i < detected_centers.size(); i++)
+	{
+		det_cent_i = detected_centers.at(i);
+		// loop through corrected centers. Note that size will change.
+		// start on index 1, need to compare ahead.
+		for (int j = 0; j < corrected_centers.size(); j++)
+		{
+			cor_cent_j = corrected_centers.at(j);
+
+			// compare distances, if distance is sufficient, we need to add the 
+			// unique center
+			if (Distance2Points(det_cent_i, cor_cent_j) > 5)
+			{
+				corrected_centers.push_back(det_cent_i);
+				break;
+			}
+		}
+	}
+
+	return corrected_centers;
+}
+
 std::vector<cv::Rect2f> ImageProcessing::FindBoundingRects(cv::Mat grayscale_img, int thresh_type)
 {
 	std::vector<cv::Rect2f> BoundRects;
@@ -575,7 +607,7 @@ float ImageProcessing::Distance2Points(cv::Point2f p1, cv::Point2f p2)
 {
 	float dist;
 	
-	dist = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+	dist = sqrt(pow(p1.x - p2.x, 2.0) + pow(p1.y - p2.y, 2.0));
 
 	return dist;
 }
@@ -1063,7 +1095,7 @@ cv::Mat ImageProcessing::DrawMainDropCent(cv::Mat GrayscaleImg, cv::Mat ColorImg
 	return drawing;
 }
 
-cv::Mat ImageProcessing::DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, float MainDropPos_mm)
+cv::Mat ImageProcessing::DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, float MainDropPos_mm, std::vector<cv::Point2f> Centers)
 {
 	cv::Mat drawing;
 	// Satellites drawn in yellow
@@ -1072,20 +1104,20 @@ cv::Mat ImageProcessing::DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorIm
 	int radius = 2;
 
 	cv::Mat bin = BinaryThresh(GrayscaleImg, thresh_type);
-	std::vector<cv::Point2f> Centers = ImageCentroids(bin);
+	//std::vector<cv::Point2f> Centers = ImageCentroids(bin);
 	
-	if (MainDropPos_mm >= 0)
-	{
-		// main drop detected so remove the centroid with max position
-		for (int i = 0; i < Centers.size(); i++)
-		{
-			if (Centers[i] == MaxImageCentroid(Centers))
-			{
-				Centers.erase(Centers.begin() + i);
-				break;
-			}
-		}
-	}
+	//if (MainDropPos_mm >= 0)
+	//{
+	//	// main drop detected so remove the centroid with max position
+	//	for (int i = 0; i < Centers.size(); i++)
+	//	{
+	//		if (Centers[i] == MaxImageCentroid(Centers))
+	//		{
+	//			Centers.erase(Centers.begin() + i);
+	//			break;
+	//		}
+	//	}
+	//}
 
 	// Now draw
 	drawing = DrawSelectedCentroids(ColorImg, Centers, yellow, radius);

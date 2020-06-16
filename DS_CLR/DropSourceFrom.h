@@ -85,6 +85,7 @@ namespace DSCLR {
 			MainDropPoints = new std::vector<cv::Point2f>();
 			MainDropPredic = new std::vector<cv::Point2f>();
 			MainDropControl = new std::vector<cv::Point2f>();
+			SatelliteCents = new std::vector<std::vector<cv::Point2f>>();
 
 			// initialise pixel velocity
 			Velocity_px = new std::vector<cv::Point2f>();
@@ -193,6 +194,7 @@ namespace DSCLR {
 		std::vector<cv::Point2f>* MainDropPoints;
 		std::vector<cv::Point2f>* MainDropControl;
 		std::vector<cv::Point2f>* MainDropPredic;
+		std::vector<std::vector<cv::Point2f>>* SatelliteCents;
 
 		// Velocity in terms of pixel position
 		std::vector<cv::Point2f>* Velocity_px;

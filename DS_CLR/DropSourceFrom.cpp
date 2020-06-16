@@ -605,45 +605,34 @@ void DSCLR::DropSourceFrom::CountNumberOfSatellites()
 			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
 		}
 
-		if (i >= 124)
+		if (i >= 125)
 		{
 			int blah = -1;
 		}
 
 		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
+		// need to correct centers. Group those that are less that 1 px apart
+		Centers = ImageProcessing::CorrectCenters(Centers);
 		pb_str = "No. Of Satellites: " + i + "/" + GrayscaleImages->size();
 		// determine if main drop is on screen
 		if (this->MainDropPosition->at(i) >= 0)
 		{
-			isMainDrop = true;
+			// main drop detected
+			// remove one center, which is main drop
+			satellites = int(Centers.size() - 1);
+			Centers.erase(Centers.begin());
 		}
 		else
-		{
-			isMainDrop = false;
-		}
-
-		if (!isMainDrop)
 		{
 			// main drop not found
 			satellites = Centers.size();
 		}
-		else
-		{
-			// main drop detected
-			// remove one center, which is main drop
-			satellites = int(Centers.size() - 1);
-			//cv::Point2f pred = this->MainDropPredic->at(i);
-			//if (pred.y > this->ImageHeight_Px)
-			//{
-			//	// main drop has gone off screen
-			//	isMainDrop = false;
-			//	endMainDrop = true;
-			//}
-		}
 
 		// Save number of satellites
 		NumberOfSatellites->push_back(satellites);
+		// save the center data
+		this->SatelliteCents->push_back(Centers);
 
 		ProgressBarUpdate(pb_str, 0, GrayscaleImages->size(), i, true);
 	}
@@ -1056,7 +1045,7 @@ void DSCLR::DropSourceFrom::DebugImages()
 		drawing = this->ColorImages->at(i).clone();
 
 		// draw main drop volume if present
-		if ((this->Position_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
+		if ((this->DropVolume_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the volume
 			drawing = ImageProcessing::DrawMainDropVolume(tmp, drawing, this->ThreshType);
@@ -1088,7 +1077,7 @@ void DSCLR::DropSourceFrom::DebugImages()
 		// draw satellites
 		if (this->Satellites_cbox->Checked)
 		{
-			drawing = ImageProcessing::DrawAllSatellites(tmp, drawing,this->ThreshType, this->MainDropPosition->at(i));
+			drawing = ImageProcessing::DrawAllSatellites(tmp, drawing,this->ThreshType, this->MainDropPosition->at(i), this->SatelliteCents->at(i));
 		}
 
 		// Save drawing
