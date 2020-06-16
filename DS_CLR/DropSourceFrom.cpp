@@ -1050,6 +1050,8 @@ void DSCLR::DropSourceFrom::DebugImages()
 			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
 		}
 
+		
+
 		// clone colour image onto drawing
 		drawing = this->ColorImages->at(i).clone();
 
@@ -1064,14 +1066,23 @@ void DSCLR::DropSourceFrom::DebugImages()
 		if ((this->LigLength_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the ligament
-			drawing = ImageProcessing::DrawLigamentLength(tmp, drawing, this->ThreshType);
+			if (this->LigamentLength->at(i) > 0) drawing = ImageProcessing::DrawLigamentLength(tmp, drawing, this->ThreshType);
+			// checking images
+			bool debug = false;
+			if (i > 101 && debug)
+			{
+				cv::imshow("gray subtracted", tmp);
+				cv::imshow("Drawing with ligament", drawing);
+				cv::waitKey(0);
+				cv::destroyAllWindows();
+			}
 		}
 
 		// draw main drop position if present
 		if ((this->Position_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the ligament
-			drawing = ImageProcessing::DrawMainDropCent(tmp, drawing, this->ThreshType, this->MainDropPoints->at(i));;
+			drawing = ImageProcessing::DrawMainDropCent(tmp, drawing, this->ThreshType, this->MainDropPoints->at(i));
 		}
 
 		// draw satellites

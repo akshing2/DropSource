@@ -604,13 +604,6 @@ std::vector<cv::Point2f> ImageProcessing::LigPoints(cv::Mat grayscale_img, int t
 	cv::Point2f p2 = pos;
 	p2.y = p2.y + HeadRadius - Rect.height;
 
-	if (Rect.height > HEIGHT_WIDTH_CMP* Rect.width)
-	{
-		// if height much greater than width, save points
-		LigamentPoints.push_back(p1);
-		LigamentPoints.push_back(p2);
-	}
-
 	return LigamentPoints;
 }
 
@@ -624,12 +617,19 @@ std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::
 	// 1. find main drop position
 	cv::Point2f MainDropPos = FindMainDropPos(grayscale_img, thresh_type);
 	// 1 a) correct main drop position
-	MainDropPos = CorrectCentroid(grayscale_img, thresh_type, MainDropPos);
+	//MainDropPos = CorrectCentroid(grayscale_img, thresh_type, MainDropPos);
 
 	// 2. find extreme bottom
 	//cv::Point2f bxy = FindBottomMostPoint(grayscale_img, thresh_type);
 	// trying with new method
 	cv::Point2f bxy = std::get<1>(TopAndBot);
+	// if we can't find bottom most point using sub pixel edge detection, use normal method
+	if (bxy.y < 0)
+	{
+		// getting value < 0, means we can't find it
+		bxy = FindBottomMostPoint(grayscale_img, thresh_type);
+
+	}
 
 	// 3. find radius of head
 	float HeadRadius = Distance2Points(MainDropPos, bxy);
@@ -642,10 +642,31 @@ std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::
 	p1.y = p1.y - HeadRadius;
 
 	// 6. find tail end of ligament, p2
-	/*cv::Point2f p2 = MainDropPos;
-	p2.y = p2.y + HeadRadius - Rect.height;*/
 	// let's find the tail end of the ligament using the new method
 	cv::Point2f p2 = std::get<0>(TopAndBot);
+	// if we can't find the sub pixel edge, we need to use the old method
+	if (p2.y <= 0)
+	{
+		p2 = MainDropPos;
+		p2.y = p2.y + HeadRadius - Rect.height;
+	}
+
+	// let's see that the points are where we expect
+	//cv::Mat drawing; 
+	//cv::cvtColor(grayscale_img, drawing, cv::COLOR_GRAY2BGR);
+	//int radius = 1;
+	//int thickness = -1;
+	//cv::Scalar red = cv::Scalar(0, 0, 255);		// main drop pos
+	//cv::Scalar green = cv::Scalar(0, 255, 0);	// bottom most point
+	//cv::Scalar blue = cv::Scalar(255, 0, 0);	// P1
+	//cv::Scalar yellow = red + green;			// P2
+	//cv::circle(drawing, MainDropPos, radius, red, thickness);
+	//cv::circle(drawing, bxy, radius, green, thickness);
+	//cv::circle(drawing, p1, radius, blue, thickness);
+	//cv::circle(drawing, p2, radius, yellow, thickness);
+	//cv::imshow("Drawing Lig Pts", drawing);
+	//cv::waitKey(0);
+	//cv::destroyAllWindows();
 
 	LigLenPts = std::make_tuple(MainDropPos, bxy, p1, p2);
 
@@ -675,7 +696,9 @@ float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img, int thresh_type, 
 	// 6. find tail end of ligament, p2
 	cv::Point2f p2 = std::get<3>(LigLenPts);
 
-	if (Rect.height > HEIGHT_WIDTH_CMP* Rect.width)
+	// need to compare aspect ratio of main drop mask to determine if drop
+	// is "long". Ie height >> width.
+	if (Rect.height > 1.05 * Rect.width)
 	{
 		// if height much greater than width, calculate ligament
 		LigLength = Distance2Points(p2, p1);
@@ -1075,27 +1098,23 @@ cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorI
 	std::vector<cv::Point2f>LigPts = LigPoints(GrayscaleImg, thresh_type);
 	cv::Scalar white = cv::Scalar(255, 255, 255);
 	int thickness = 4;
-	cv::Mat drawing;
-	/*if (LigPts.size() > 0)
-	{
-		drawing = DrawLine2Points(ColorImg, LigPts, white, thickness);
-	}
-	else {
-		drawing = ColorImg.clone();
-	}*/
+	cv::Mat drawing = ColorImg.clone();
 
 	//// do different method
 	//// get tuple of lig points
 	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts = LigLenPoints(GrayscaleImg, thresh_type);
 	// make vector of bottom and top most points
 	std::vector<cv::Point2f> ll{ std::get<2>(ll_pts), std::get<3>(ll_pts) };
-	if (LigPts.size() > 0)
-	{
-		drawing = DrawLine2Points(ColorImg, ll, white, thickness);
-	}
-	else {
-		drawing = ColorImg.clone();
-	}
+	// we handle if line needs to be drawn in DropSourceForm.cpp
+	cv::line(drawing, std::get<2>(ll_pts), std::get<3>(ll_pts), white, thickness);
+
+
+	//if (LigPts.size() > 0)
+	//{
+	//	//drawing = DrawLine2Points(ColorImg, ll, white, thickness);
+	//	
+	//}
+	
 
 	return drawing;
 }

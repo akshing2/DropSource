@@ -148,6 +148,7 @@
     </ClInclude>
     <ClInclude Include="EdgesSubPix.h" />
     <ClInclude Include="ImageProc.h" />
+    <ClInclude Include="ImageProcessingParameters.h" />
     <ClInclude Include="pid.h" />
     <ClInclude Include="PID_Params.h" />
     <ClInclude Include="Test_Macro.h" />

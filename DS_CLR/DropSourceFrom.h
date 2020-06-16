@@ -328,6 +328,7 @@ private: System::Windows::Forms::RadioButton^ CannyEdge_Rdibtn;
 			this->DropAnalysis_lbl = (gcnew System::Windows::Forms::Label());
 			this->ImageProcessing_lbl = (gcnew System::Windows::Forms::Label());
 			this->ThreshGroupBox = (gcnew System::Windows::Forms::GroupBox());
+			this->CannyEdge_Rdibtn = (gcnew System::Windows::Forms::RadioButton());
 			this->AdaptiveThresh_RdBtn = (gcnew System::Windows::Forms::RadioButton());
 			this->GlobalThresh_RdBtn = (gcnew System::Windows::Forms::RadioButton());
 			this->ImgSubEn_cbox = (gcnew System::Windows::Forms::CheckBox());
@@ -342,7 +343,6 @@ private: System::Windows::Forms::RadioButton^ CannyEdge_Rdibtn;
 			this->UA_ROI_Height_lbl = (gcnew System::Windows::Forms::Label());
 			this->Error_UA = (gcnew System::Windows::Forms::Label());
 			this->CentroidCorrect_cbox = (gcnew System::Windows::Forms::CheckBox());
-			this->CannyEdge_Rdibtn = (gcnew System::Windows::Forms::RadioButton());
 			this->ThreshGroupBox->SuspendLayout();
 			this->SuspendLayout();
 			// 
@@ -831,10 +831,22 @@ private: System::Windows::Forms::RadioButton^ CannyEdge_Rdibtn;
 			this->ThreshGroupBox->TabStop = false;
 			this->ThreshGroupBox->Text = L"Binary Thresholding Method";
 			// 
+			// CannyEdge_Rdibtn
+			// 
+			this->CannyEdge_Rdibtn->AutoSize = true;
+			this->CannyEdge_Rdibtn->Location = System::Drawing::Point(6, 85);
+			this->CannyEdge_Rdibtn->Name = L"CannyEdge_Rdibtn";
+			this->CannyEdge_Rdibtn->Size = System::Drawing::Size(100, 20);
+			this->CannyEdge_Rdibtn->TabIndex = 2;
+			this->CannyEdge_Rdibtn->Text = L"Canny Edge";
+			this->CannyEdge_Rdibtn->TextImageRelation = System::Windows::Forms::TextImageRelation::ImageAboveText;
+			this->CannyEdge_Rdibtn->UseVisualStyleBackColor = true;
+			this->CannyEdge_Rdibtn->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::CannyEdge_Rdibtn_CheckedChanged);
+			// 
 			// AdaptiveThresh_RdBtn
 			// 
 			this->AdaptiveThresh_RdBtn->AutoSize = true;
-			this->AdaptiveThresh_RdBtn->Location = System::Drawing::Point(3, 59);
+			this->AdaptiveThresh_RdBtn->Location = System::Drawing::Point(6, 59);
 			this->AdaptiveThresh_RdBtn->Name = L"AdaptiveThresh_RdBtn";
 			this->AdaptiveThresh_RdBtn->Size = System::Drawing::Size(144, 20);
 			this->AdaptiveThresh_RdBtn->TabIndex = 1;
@@ -992,18 +1004,6 @@ private: System::Windows::Forms::RadioButton^ CannyEdge_Rdibtn;
 			this->CentroidCorrect_cbox->TabIndex = 56;
 			this->CentroidCorrect_cbox->Text = L"Enable Centroid Correction";
 			this->CentroidCorrect_cbox->UseVisualStyleBackColor = true;
-			// 
-			// CannyEdge_Rdibtn
-			// 
-			this->CannyEdge_Rdibtn->AutoSize = true;
-			this->CannyEdge_Rdibtn->Location = System::Drawing::Point(6, 85);
-			this->CannyEdge_Rdibtn->Name = L"CannyEdge_Rdibtn";
-			this->CannyEdge_Rdibtn->Size = System::Drawing::Size(100, 20);
-			this->CannyEdge_Rdibtn->TabIndex = 2;
-			this->CannyEdge_Rdibtn->Text = L"Canny Edge";
-			this->CannyEdge_Rdibtn->TextImageRelation = System::Windows::Forms::TextImageRelation::ImageAboveText;
-			this->CannyEdge_Rdibtn->UseVisualStyleBackColor = true;
-			this->CannyEdge_Rdibtn->CheckedChanged += gcnew System::EventHandler(this, &DropSourceFrom::CannyEdge_Rdibtn_CheckedChanged);
 			// 
 			// DropSourceFrom
 			// 
