@@ -75,10 +75,12 @@ cv::Mat ImageProcessing::BinaryThresh(cv::Mat image, int thresh_type)
 		cv::GaussianBlur(image, pre_proc, cv::Size(5, 5), 0);
 		cv::threshold(pre_proc, pre_proc, 0, 255, cv::THRESH_BINARY);
 	}
+
 	else if (thresh_type == THRESH_CANNY_EDGE)
 	{
 		CannyEdgeDetect(image, DEF_HI_THRESH, DEF_LO_THRESH, DEF_EDGE_THRESH, DEF_KERNAL_SIZE);
 	}
+	
 	
 
 	return pre_proc;
@@ -639,7 +641,7 @@ std::vector<cv::Point2f> ImageProcessing::LigPoints(cv::Mat grayscale_img, int t
 	return LigamentPoints;
 }
 
-std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::LigLenPoints(cv::Mat grayscale_img, int thresh_type)
+std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::LigLenPoints(cv::Mat grayscale_img, int thresh_type, cv::Point2f pos)
 {
 	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPts;
 
@@ -647,7 +649,7 @@ std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::
 	std::tuple<cv::Point2f, cv::Point2f> TopAndBot = TopAndBotOfMainDrop(grayscale_img);
 
 	// 1. find main drop position
-	cv::Point2f MainDropPos = FindMainDropPos(grayscale_img, thresh_type);
+	cv::Point2f MainDropPos = pos;
 	// 1 a) correct main drop position
 	//MainDropPos = CorrectCentroid(grayscale_img, thresh_type, MainDropPos);
 
@@ -683,23 +685,6 @@ std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::
 		p2.y = p2.y + HeadRadius - Rect.height;
 	}
 
-	// let's see that the points are where we expect
-	//cv::Mat drawing; 
-	//cv::cvtColor(grayscale_img, drawing, cv::COLOR_GRAY2BGR);
-	//int radius = 1;
-	//int thickness = -1;
-	//cv::Scalar red = cv::Scalar(0, 0, 255);		// main drop pos
-	//cv::Scalar green = cv::Scalar(0, 255, 0);	// bottom most point
-	//cv::Scalar blue = cv::Scalar(255, 0, 0);	// P1
-	//cv::Scalar yellow = red + green;			// P2
-	//cv::circle(drawing, MainDropPos, radius, red, thickness);
-	//cv::circle(drawing, bxy, radius, green, thickness);
-	//cv::circle(drawing, p1, radius, blue, thickness);
-	//cv::circle(drawing, p2, radius, yellow, thickness);
-	//cv::imshow("Drawing Lig Pts", drawing);
-	//cv::waitKey(0);
-	//cv::destroyAllWindows();
-
 	LigLenPts = std::make_tuple(MainDropPos, bxy, p1, p2);
 
 	return LigLenPts;
@@ -708,7 +693,7 @@ std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ImageProcessing::
 float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img, int thresh_type, cv::Point2f MainDropPoint)
 {
 	float LigLength = -1;
-	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPts = LigLenPoints(grayscale_img, thresh_type);
+	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPts = LigLenPoints(grayscale_img, thresh_type, MainDropPoint);
 
 	// 1. find main drop position
 	cv::Point2f pos = MainDropPoint;
@@ -727,6 +712,23 @@ float ImageProcessing::LengthOfLigament(cv::Mat grayscale_img, int thresh_type, 
 
 	// 6. find tail end of ligament, p2
 	cv::Point2f p2 = std::get<3>(LigLenPts);
+
+	// let's see that the points are where we expect
+	//cv::Mat drawing;
+	//cv::cvtColor(grayscale_img, drawing, cv::COLOR_GRAY2BGR);
+	//int radius = 1;
+	//int thickness = -1;
+	//cv::Scalar red = cv::Scalar(0, 0, 255);		// main drop pos
+	//cv::Scalar green = cv::Scalar(0, 255, 0);	// bottom most point
+	//cv::Scalar blue = cv::Scalar(255, 0, 0);	// P1
+	//cv::Scalar yellow = red + green;			// P2
+	//cv::circle(drawing, pos, radius, red, thickness);
+	//cv::circle(drawing, ExtBot, radius, green, thickness);
+	//cv::circle(drawing, p1, radius, blue, thickness);
+	//cv::circle(drawing, p2, radius, yellow, thickness);
+	//cv::imshow("Drawing Lig Pts", drawing);
+	//cv::waitKey(0);
+	//cv::destroyAllWindows();
 
 	// need to compare aspect ratio of main drop mask to determine if drop
 	// is "long". Ie height >> width.
@@ -1125,7 +1127,7 @@ cv::Mat ImageProcessing::DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorIm
 	return drawing;
 }
 
-cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type)
+cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, cv::Point2f MainDropPoint)
 {
 	std::vector<cv::Point2f>LigPts = LigPoints(GrayscaleImg, thresh_type);
 	cv::Scalar white = cv::Scalar(255, 255, 255);
@@ -1134,7 +1136,7 @@ cv::Mat ImageProcessing::DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorI
 
 	//// do different method
 	//// get tuple of lig points
-	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts = LigLenPoints(GrayscaleImg, thresh_type);
+	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts = LigLenPoints(GrayscaleImg, thresh_type, MainDropPoint);
 	// make vector of bottom and top most points
 	std::vector<cv::Point2f> ll{ std::get<2>(ll_pts), std::get<3>(ll_pts) };
 	// we handle if line needs to be drawn in DropSourceForm.cpp

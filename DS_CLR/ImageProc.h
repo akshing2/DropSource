@@ -108,7 +108,7 @@ namespace ImageProcessing
 	std::vector<cv::Point2f> LigPoints(cv::Mat grayscale_img, int thresh_type);
 	// Return cv points needed to calculate length of ligament as a tuple
 	// 0->MainHeadPos, 1->bottommost position, 2->p1, 3->p2
-	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPoints(cv::Mat grayscale_img, int thresh_type);
+	std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> LigLenPoints(cv::Mat grayscale_img, int thresh_type, cv::Point2f pos);
 	// Calculate length of ligament in picture
 	float LengthOfLigament(cv::Mat grayscale_img, int thresh_type, cv::Point2f MainDropPoint);
 	
@@ -143,7 +143,7 @@ namespace ImageProcessing
 	// Draw All Satellites
 	cv::Mat DrawAllSatellites(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, float MainDropPos_mm, std::vector<cv::Point2f> Centers);
 	// Draw Ligament Length
-	cv::Mat DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type);
+	cv::Mat DrawLigamentLength(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type, cv::Point2f MainDropPoint);
 	// Draw Volume of Main Drop
 	cv::Mat DrawMainDropVolume(cv::Mat GrayscaleImg, cv::Mat ColorImg, int thresh_type);
 

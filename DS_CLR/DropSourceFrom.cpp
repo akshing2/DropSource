@@ -383,6 +383,7 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 			// subtract images
 			tmp = ImageProcessing::GrayImageSubtraction(this->GrayscaleImages->at(0), tmp);
 		}
+		
 
 		// If UA is checked, make sure to find del_dx and del_dy
 		if (this->UA_Enable_cbox->Checked)
@@ -397,6 +398,7 @@ void DSCLR::DropSourceFrom::MainDropPositions()
 
 		bin_img = ImageProcessing::BinaryThresh(tmp, this->ThreshType);
 		Centers = ImageProcessing::ImageCentroids(bin_img);
+
 
 		// show pictures if a center is detected
 		bool debug = false;
@@ -678,7 +680,7 @@ void DSCLR::DropSourceFrom::CalculateLigLength()
 				// get dy first
 				dy = this->ROI_H / (GrayscaleImages->at(i).size().height);
 				// get liglen points
-				std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts = ImageProcessing::LigLenPoints(GrayscaleImages->at(i), this->ThreshType);
+				std::tuple<cv::Point2f, cv::Point2f, cv::Point2f, cv::Point2f> ll_pts = ImageProcessing::LigLenPoints(GrayscaleImages->at(i), this->ThreshType, this->MainDropPoints->at(i));
 				// get uncertainty in lig len
 				del_LigLen = UA_LigamentLength::get_del_liglen(ll_pts, this->del_rpx_rel, dy, this->del_dy);
 			}
@@ -1055,7 +1057,7 @@ void DSCLR::DropSourceFrom::DebugImages()
 		if ((this->LigLength_cbox->Checked) && (this->MainDropPosition->at(i) >= 0))
 		{
 			// main drop exists, so draw the ligament
-			if (this->LigamentLength->at(i) > 0) drawing = ImageProcessing::DrawLigamentLength(tmp, drawing, this->ThreshType);
+			if (this->LigamentLength->at(i) > 0) drawing = ImageProcessing::DrawLigamentLength(tmp, drawing, this->ThreshType, this->MainDropPoints->at(i));
 			// checking images
 			bool debug = false;
 			if (i > 101 && debug)
